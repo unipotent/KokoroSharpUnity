@@ -8,8 +8,7 @@ public static class Tokenizer {
     public static Dictionary<char, int> Vocab { get; } = GetVocab();
 
     // If any isn't present in the vocab, it'll be discarded later anyway.
-    static HashSet<char> punctuation = ['.', ',', '?', '!', ';', ':', '-', '(', ')', '[', ']', '{', '}', '\"', '\'', '/', '\\', '&', '@', '#', '%', '$', '*', '~', '`', '<', '>', '|', '^', '_'];
-    static HashSet<char> noSpacePunc = ['\'', '-', '\"', '(', ')', '[', ']', '{', '}', '/', '\\', '&', '@', '#', '%', '$', '*', '~', '`', '<', '>', '|', '^', '_'];
+    static HashSet<char> punctuation = [.. ":,.!?"];
 
 
     /// <summary> Converts the input text to phoneme tokens, directly usable by Kokoro. </summary>
@@ -18,7 +17,7 @@ public static class Tokenizer {
     static string Phonemize(string inputText) {
         var preprocessedText = PreprocessText(inputText);
         var phonemeList = Phonemize_Internal(preprocessedText).Split('\n');
-        return PostProcessPhonemes(inputText, phonemeList);
+        return PostProcessPhonemes(preprocessedText, phonemeList);
     }
 
     static string Phonemize_Internal(string text) {
@@ -42,8 +41,8 @@ public static class Tokenizer {
 
     /// <summary> Normalizes the input text to what Kokoro would expect to see, preparing it for phonemization. </summary>
     static string PreprocessText(string text) {
-        text = text.Replace('\u2018', '\'').Replace('\u2019', '\'').Replace("«", "\u201C").Replace("»", "\u201D").Replace('\u201C', '"').Replace('\u201D', '"');
-        foreach (var (a, b) in new[] { ("、", ", "), ("。", ". "), ("！", "! "), ("，", ", "), ("：", ": "), ("；", "; "), ("？", "? ") }) { text = text.Replace(a, b); }
+        text = text.Normalize().Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "");
+        foreach (var punc in punctuation) { text = text.Replace(punc.ToString(), $"{punc} "); }
 
         text = Regex.Replace(text, @"\bD[Rr]\.(?= [A-Z])", "Doctor");
         text = Regex.Replace(text, @"\b(Mr|MR)\.(?= [A-Z])", "Mister");
@@ -53,7 +52,8 @@ public static class Tokenizer {
         text = Regex.Replace(text, @"(?<!\:)\b([1-9]|1[0-2]):([0-5]\d)\b(?!\:)", m => $"{m.Groups[1].Value} {m.Groups[2].Value}");
         text = Regex.Replace(text, @"[$£]\d+(?:\.\d+)?", FlipMoneyMatch);
         text = Regex.Replace(text, @"\d+\.\d+", PointNumMatch);
-
+        
+        while (punctuation.Contains(text[0])) { text = text[1..]; }
         return text.Trim();
 
 
@@ -62,8 +62,7 @@ public static class Tokenizer {
             var value = m.Value[1..];
             var currency = m.Value[0] == '$' ? "dollar" : "pound";
             return value.Contains('.') ? $"{value.Replace(".", " ")} {currency}s"
-                 : value.EndsWith('1') ? $"{value} {currency}"
-                 : $"{value} {currency}s";
+                 : value.EndsWith('1') ? $"{value} {currency}" : $"{value} {currency}s";
         }
 
         static string PointNumMatch(Match m) {
@@ -75,14 +74,20 @@ public static class Tokenizer {
     /// <summary> Post-processes the phonemes to Kokoro's specs, preparing them for tokenization. </summary>
     /// <remarks> We also use the initial text to restore the punctuation. </remarks>
     static string PostProcessPhonemes(string initialText, string[] phonemesArray, string lang = "en-us") {
-        var puncs = new List<char>();
-        foreach (var c in initialText) { if (punctuation.Contains(c)) { puncs.Add(c); } }
+        var puncs = new List<string>();
+        for (int i = 0; i < initialText.Length; i++) {
+            char c = initialText[i];
+            if (punctuation.Contains(c)) {
+                var punc = c.ToString();
+                while (i < initialText.Length - 1 && (punctuation.Contains(initialText[++i]) || initialText[i] == ' ')) { punc += initialText[i]; }
+                puncs.Add(punc);
+            }
+        }
 
         var sb = new StringBuilder();
         for (int i = 0; i < phonemesArray.Length; i++) {
             sb.Append(phonemesArray[i]);
-            sb.Append(puncs[i]);
-            if (!noSpacePunc.Contains(puncs[i])) { sb.Append(' '); }
+            if (puncs.Count > i) { sb.Append(puncs[i]); }
         }
         var phonemes = sb.ToString().Trim();
 

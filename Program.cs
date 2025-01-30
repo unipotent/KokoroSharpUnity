@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 namespace KokoroSharp;
 using NAudio.Wave;
 
@@ -14,7 +12,7 @@ internal class Program {
             var s = Tokenizer.Tokenize(x);
             Debug.WriteLine(string.Join(',', s));
 
-            var f = kokoro.RunModel(s, 1);
+            var f = kokoro.TokensToWav_SingleBatch(s, 1);
             Debug.WriteLine(f.Length);
             PlayAudio(f);
         }
