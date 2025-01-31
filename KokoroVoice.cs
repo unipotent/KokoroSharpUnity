@@ -1,0 +1,22 @@
+﻿namespace KokoroSharp;
+
+/// <summary> A Kokoro Voice instance, holding the speaker embeddings that *colors* the spoken text with specific characteristics. </summary>
+/// <remarks> You can use the <b>KokoroVoiceManager.Mix(...)</b> method to create new voices out of the existing ones. </remarks>
+public class KokoroVoice {
+    public string Name { get; init; }
+
+    /// <summary> Contains the speaker embeddings for this voice, in C# format, but otherwise representing a [510, 1, 256] Tensor. </summary>
+    /// <remarks> Can initialize this via <see cref="FromPath(string)"/>. See the documentation for more information on how to prepare `.pt` voices for use in KokoroSharp. </remarks>
+    public float[,,] Features { get; init; }
+
+    /// <summary> Exports the voice on specified path. The voice can later be retrieved again with <see cref="FromPath(string)"/>. </summary>
+    public void Export(string filePath) => NumSharp.np.Save(Features, filePath);
+
+    public static KokoroVoice FromPath(string filePath) {
+        var name = Path.GetFileNameWithoutExtension(filePath);
+        return new() { Name = name, Features = NumSharp.np.Load<float[,,]>(filePath) };
+    }
+
+    /// <summary> Implicit conversion between <see cref="KokoroVoice"/> and a <b>3D <see cref="float"/> array</b> (float[,,] aka Tensor [510, 1, 256]) </summary>
+    public static implicit operator float[,,](KokoroVoice voice) => voice.Features;
+}

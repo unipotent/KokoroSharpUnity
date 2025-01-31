@@ -5,45 +5,46 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 
 using System.Collections.Generic;
 
-public class KokoroModel {
-    readonly InferenceSession _session;
+/// <summary> An instance of the model in the ONNX runtime. For a higher level module, see <see cref="KokoroTTS"/>. </summary>
+/// <remarks> Once instantiated, the model will remain loaded and be ready to be reused for inference with new parameters. </remarks>
+public class KokoroModel : IDisposable {
+    readonly InferenceSession session;
+    readonly SessionOptions defaultOptions = new() { EnableMemoryPattern = true, InterOpNumThreads = 8, IntraOpNumThreads = 8 };
 
-    static float[,,] voiceStyle;
+    const int maxTokens = 510;
 
-    public KokoroModel(string modelPath, string voicePath = null) {
-        var options = new SessionOptions() { EnableMemoryPattern = true, InterOpNumThreads = 8, IntraOpNumThreads = 8 };
-        //options.AppendExecutionProvider_CUDA(0);
-        _session = new InferenceSession(modelPath, options);
+    public KokoroModel(string modelPath, SessionOptions options = null) {
+        session = new InferenceSession(modelPath, options ?? defaultOptions);
     }
 
-    public float[] TokensToWav_SingleBatch(int[] tokens, string voicePath, float speed = 1) {
-        var voiceStyle = NumSharp.np.Load<float[,,]>(voicePath); // 510, 1, 256
-        int maxPhonemeLength = voiceStyle.GetLength(0);
-        var voiceDims = voiceStyle.GetLength(2);
 
-        if (tokens.Length > maxPhonemeLength) { Array.Resize(ref tokens, maxPhonemeLength); }
+    /// <summary> Requests inference with the Model via the ONNX runtime, with specified tokens, style, and speed. </summary>
+    /// <remarks> Synchronously waits for the output (audio samples), and returns them when ready. Best used in async context. </remarks>
+    public float[] Infer(int[] tokens, float[,,] voiceStyle, float speed = 1) {
+        var (B, T, C) = (1, tokens.Length, voiceStyle.GetLength(2));
+        if (tokens.Length > maxTokens) { Array.Resize(ref tokens, T = maxTokens); }
+
+        var tokenTensor = new DenseTensor<long>([B, T + 2]); // <start>{text}<end>
+        var styleTensor = new DenseTensor<float>([B, C]); // Voice features
+        var speedTensor = new DenseTensor<float>(new[] { speed }, [B]);
 
         // Form Kokoro's input (<start>{text}<end>)
-        var inputTokens = new int[tokens.Length + 2];
-        inputTokens[0] = 0; // <start>
-        Array.Copy(tokens, 0, inputTokens, 1, tokens.Length);
-        inputTokens[^1] = 0; // <end>
+        var inputTokens = new int[T + 2]; // Initialized with all zeroes (<pad>).
+        Array.Copy(tokens, 0, inputTokens, 1, T); // [0] and [^1] stay as zeroes.
 
-        var tokenTensor = new DenseTensor<long>([1, inputTokens.Length]); // Batch size = 1
+        for (int j = 0; j < C; j++) { styleTensor[0, j] = voiceStyle[T, 0, j]; }
         for (int i = 0; i < inputTokens.Length; i++) { tokenTensor[0, i] = inputTokens[i]; }
-        var styleTensor = new DenseTensor<float>([1, voiceDims]);
-        for (int j = 0; j < voiceDims; j++) { styleTensor[0, j] = voiceStyle[tokens.Length, 0, j]; }
-        var speedTensor = new DenseTensor<float>(new[] { speed }, [1]);
-        
-        // Create input data map
-        var inputs = new List<NamedOnnxValue> {
-            NamedOnnxValue.CreateFromTensor("tokens", tokenTensor),
-            NamedOnnxValue.CreateFromTensor("style", styleTensor),
-            NamedOnnxValue.CreateFromTensor("speed", speedTensor)
-        };
-        
-        using var results = _session.Run(inputs);
-        var x = results[0].AsTensor<float>();
-        return [.. x];
+
+        var inputs = new List<NamedOnnxValue> { GetOnnxValue("tokens", tokenTensor), GetOnnxValue("style", styleTensor), GetOnnxValue("speed", speedTensor) };
+        using var results = session.Run(inputs);
+        return [.. results[0].AsTensor<float>()];
+
+
+
+        NamedOnnxValue GetOnnxValue<T>(string name, DenseTensor<T> val) => NamedOnnxValue.CreateFromTensor(name, val);
+    }
+
+    public void Dispose() {
+        session.Dispose();
     }
 }
