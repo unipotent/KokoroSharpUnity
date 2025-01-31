@@ -1,0 +1,6 @@
+<Project>
+    <ItemGroup>
+        <Content Include="$(MSBuildThisFileDirectory)..\voices\**" CopyToOutputDirectory="PreserveNewest" Link="voices\%(RecursiveDir)%(FileName)%(Extension)"/>
+        <Content Include="$(MSBuildThisFileDirectory)..\espeak\**" CopyToOutputDirectory="PreserveNewest" Link="espeak\%(RecursiveDir)%(FileName)%(Extension)"/>
+    </ItemGroup>
+</Project>

@@ -3,32 +3,30 @@ name: Publish to NuGet
 on:
   push:
     branches:
-      - main
+        - main
     paths-ignore:
-      - 'README.md'
+        - 'README.md'
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
 
-      - name: Download Release Assets
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p release-assets
-          gh release download --repo $GITHUB_REPOSITORY --pattern 'voices.zip' --dir release-assets
-          gh release download --repo $GITHUB_REPOSITORY --pattern 'espeak.zip' --dir release-assets
+    - name: Download Release Assets
+      run: |
+        mkdir -p release-assets
+        curl -L -o release-assets/voices.zip https://github.com/Lyrcaxis/KokoroSharp/releases/download/v0.1.0/voices.zip
+        curl -L -o release-assets/espeak.zip https://github.com/Lyrcaxis/KokoroSharp/releases/download/v0.1.0/espeak.zip
 
-      - name: Unzip Release Assets
-        run: |
-          unzip release-assets/voices.zip -d voices
-          unzip release-assets/espeak.zip -d espeak
+    - name: Unzip Release Assets
+      run: |
+        unzip release-assets/voices.zip -d .
+        unzip release-assets/espeak.zip -d .
 
-      - run: dotnet build -c Release
-      - run: dotnet pack -c Release
-      - run: dotnet nuget push ./bin/Release/*.nupkg -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+    - run: dotnet build -c Release
+    - run: dotnet pack -c Release
+    - run: dotnet nuget push ./bin/Release/*.nupkg -k ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
