@@ -12,6 +12,7 @@ public class KokoroVoice {
     /// <summary> Exports the voice on specified path. The voice can later be retrieved again with <see cref="FromPath(string)"/>. </summary>
     public void Export(string filePath) => NumSharp.np.Save(Features, filePath);
 
+    /// <summary> Loads an exported voice from specified file path. </summary>
     public static KokoroVoice FromPath(string filePath) {
         var name = Path.GetFileNameWithoutExtension(filePath);
         return new() { Name = name, Features = NumSharp.np.Load<float[,,]>(filePath) };
@@ -19,4 +20,7 @@ public class KokoroVoice {
 
     /// <summary> Implicit conversion between <see cref="KokoroVoice"/> and a <b>3D <see cref="float"/> array</b> (float[,,] aka Tensor [510, 1, 256]) </summary>
     public static implicit operator float[,,](KokoroVoice voice) => voice.Features;
+
+    /// <summary> Implicit conversion between <see cref="KokoroVoice"/> and a <b>3D <see cref="float"/> array</b> (float[,,] aka Tensor [510, 1, 256]) </summary>
+    public static implicit operator KokoroVoice(float[,,] features) => new() { Name = "", Features = features };
 }

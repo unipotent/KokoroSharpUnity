@@ -7,9 +7,12 @@ using NumSharp;
 public static class KokoroVoiceManager {
     public static List<KokoroVoice> Voices { get; } = new();
 
-    public static void LoadVoicesFromPath(string voicesPath, IEnumerable<KokoroLanguage> languages = null) {
+    /// <summary> Gathers and loads all voices on the specified path. Loaded voices can be accessed via <see cref="GetVoice(string)"/>. </summary>
+    /// <remarks> If 'languages' is specified, voices of languages different than the ones listed will be ignored. </remarks>
+    public static void LoadVoicesFromPath(string voicesPath = "voices", IEnumerable<KokoroLanguage> languages = null, KokoroGender gender = KokoroGender.Both) {
         IEnumerable<string> files = Directory.GetFiles(voicesPath);
         if (languages != null) { files = files.Where(x => languages.Any(l => x.StartsWith(l.AsString()))); }
+        if (gender != KokoroGender.Both) { files = files.Where(x => x[1] == (char) gender); }
 
         foreach (var filePath in files) {
             var voiceName = Path.GetFileNameWithoutExtension(filePath);
@@ -48,6 +51,7 @@ public static class KokoroVoiceManager {
     /// <remarks> For more fine-grained control and mixing multiple voices in one go, see <b>KokoroVoiceManager.Mix(..)</b>. </remarks>
     public static KokoroVoice MixWith(this KokoroVoice A, KokoroVoice B, float λa = 0.5f, float λb = 0.5f) => Mix([(A, λb), (B, λb)]);
 
-    /// <summary> </summary>
+    /// <summary> Converts the enum value to its *language representation char*. </summary>
+    /// <remarks> That char can be used as a filter to grab voices from that language. </remarks>
     public static string AsString(this KokoroLanguage lang) => ((char) lang).ToString();
 }

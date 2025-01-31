@@ -13,3 +13,7 @@ public enum KokoroLanguage {
     Italian = 'i',
     BrazilianPortuguese = 'p'
 }
+
+/// <summary> Used to name-filter voices based on their second letter, which represents the speaker's gender. </summary>
+/// <remarks> For example a voice of an <b>AmericanEnglish Male</b> speaker will start with <b>`am_`</b> whereas a <b>Hindi Female</b>'s will start with <b>`hf_`</b>. </remarks>
+public enum KokoroGender { Both, Male = 'm', Female = 'f' }

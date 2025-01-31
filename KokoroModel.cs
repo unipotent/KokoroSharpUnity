@@ -32,14 +32,12 @@ public class KokoroModel : IDisposable {
         var inputTokens = new int[T + 2]; // Initialized with all zeroes (<pad>).
         Array.Copy(tokens, 0, inputTokens, 1, T); // [0] and [^1] stay as zeroes.
 
-        for (int j = 0; j < C; j++) { styleTensor[0, j] = voiceStyle[T, 0, j]; }
+        for (int j = 0; j < C; j++) { styleTensor[0, j] = voiceStyle[T - 1, 0, j]; }
         for (int i = 0; i < inputTokens.Length; i++) { tokenTensor[0, i] = inputTokens[i]; }
 
         var inputs = new List<NamedOnnxValue> { GetOnnxValue("tokens", tokenTensor), GetOnnxValue("style", styleTensor), GetOnnxValue("speed", speedTensor) };
         using var results = session.Run(inputs);
         return [.. results[0].AsTensor<float>()];
-
-
 
         NamedOnnxValue GetOnnxValue<T>(string name, DenseTensor<T> val) => NamedOnnxValue.CreateFromTensor(name, val);
     }
