@@ -3,12 +3,13 @@
     <PropertyGroup>
         <OutputType>Library</OutputType>
         <TargetFramework>net8.0</TargetFramework>
-        <Version>0.1.8</Version>
+        <Version>0.1.9</Version>
         <PackageId>KokoroSharp</PackageId>
         <Authors>Lyrcaxis</Authors>
         <Description>An inference engine for Kokoro TTS with ONNX runtime, enabling fast and flexible text-to-speech (fp/quanted) purely via C#. It features segment streaming, voice mixing, linear job scheduling, and optional playback.</Description>
         <RepositoryUrl>https://github.com/Lyrcaxis/KokoroSharp</RepositoryUrl>
         <PackageTags>Kokoro, TTS, AI, ONNX, SpeechSynthesis, TextToSpeech</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
@@ -24,6 +25,7 @@
     <ItemGroup>
         <Content Include="voices/**" PackagePath="voices" CopyToOutputDirectory="PreserveNewest" />
         <Content Include="espeak/**" PackagePath="espeak" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
     <ItemGroup>

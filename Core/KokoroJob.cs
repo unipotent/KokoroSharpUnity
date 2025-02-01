@@ -7,9 +7,9 @@ public enum KokoroJobState { Queued, Running, Completed, Canceled }
 /// <summary> An inference job that is to be dispatched by the <see cref="KokoroTTS"/> engine. </summary>
 /// <remarks> Consists of one or multiple steps, which are processed in order. </remarks>
 public class KokoroJob {
-    public KokoroJobState State { get; private set; }
+    public KokoroJobState State { get; protected set; }
     public List<KokoroJobStep> Steps { get; init; }
-    public int StepIndex { get; private set; }
+    public int StepIndex { get; protected set; }
 
     /// <summary> Will be true if the job was either canceled or completed. </summary>
     public virtual bool isDone => State == KokoroJobState.Completed || State == KokoroJobState.Canceled;
@@ -22,9 +22,8 @@ public class KokoroJob {
         if (StepIndex >= Steps.Count) { State = KokoroJobState.Completed; return; }
         if (StepIndex == 0) { State = KokoroJobState.Running; }
 
-        var nextStep = Steps[StepIndex];
-        var (tokens, style, speed) = (nextStep.Tokens, nextStep.VoiceStyle, nextStep.Speed);
-        var output = model.Infer(tokens, style, speed);
+        var step = Steps[StepIndex];
+        var output = model.Infer(step.Tokens, step.VoiceStyle, step.Speed);
         if (State == KokoroJobState.Canceled) { return; }
 
         Steps[StepIndex].OnStepComplete?.Invoke(output);
@@ -42,18 +41,21 @@ public class KokoroJob {
 
     /// <summary> Creates a multi-step job, usually with pre-segmented token chunks. When the step is completed, the callback will be invoked with the output waveform. </summary>
     public static KokoroJob Create(List<int[]> segments, float[,,] voiceStyle, float speed, Action<float[]> OnComplete) => new() { Steps = segments.Select(x => new KokoroJobStep(x, voiceStyle, speed, OnComplete)).ToList() };
-}
 
-public class KokoroJobStep {
-    public float Speed { get; set; }
-    public int[] Tokens { get; set; }
-    public float[,,] VoiceStyle { get; set; }
 
-    /// <summary> Gets invoked after this step is fully processed by the engine, with an array of the output audio samples as parameter. </summary>
-    public Action<float[]> OnStepComplete { get; set; }
+    /// <summary> An instance of an inference step of a KokoroJob. This typically contains a segment (part of the whole input). </summary>
+    /// <remarks> All steps are performed in order, and will block execution of future staps and jobs, enabling linear scheduling. </remarks>
+    public class KokoroJobStep {
+        public float Speed { get; set; }
+        public int[] Tokens { get; set; }
+        public float[,,] VoiceStyle { get; set; }
 
-    public KokoroJobStep(int[] tokens, float[,,] voiceStyle, float speed, Action<float[]> OnComplete) {
-        (Tokens, VoiceStyle, Speed) = (tokens, voiceStyle, speed);
-        OnStepComplete = OnComplete;
+        /// <summary> Gets invoked after this step is fully processed by the engine, with an array of the output audio samples as parameter. </summary>
+        public Action<float[]> OnStepComplete { get; set; }
+
+        public KokoroJobStep(int[] tokens, float[,,] voiceStyle, float speed, Action<float[]> OnComplete) {
+            (Tokens, VoiceStyle, Speed) = (tokens, voiceStyle, speed);
+            OnStepComplete = OnComplete;
+        }
     }
 }

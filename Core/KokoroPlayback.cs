@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 /// <summary> Helper class that can simplify audio playback from Kokoro Inference Jobs. Can be either reused or live with a specific KokoroJob instance. </summary>
 /// <remarks> Internally hosts a background worker thread that keeps checking for any queued samples, and plays them back if there's nothing else playing, in the same order they were queued. </remarks>
 public sealed class KokoroPlayback : IDisposable {
-    readonly WaveFormat waveFormat = new(24000, 16, 1);
+    public static readonly WaveFormat waveFormat = new(24000, 16, 1);
     readonly WaveOutEvent waveOut = new();
     readonly ConcurrentQueue<float[]> queuedSamples = [];
 
@@ -18,7 +18,7 @@ public sealed class KokoroPlayback : IDisposable {
 
     /// <summary> If true, the output audio of the model will be *nicified* before being played back. </summary>
     /// <remarks> Nicification includes trimming silent start and finish, and attempting to reduce noise. </remarks>
-    public static bool NicifySamples { get; set; }
+    public bool NicifySamples { get; set; }
 
     /// <summary> Creates an audio playback instance, and causes it to automatically play back all samples added via <see cref="Enqueue(float[])"/>. </summary>
     /// <remarks> If 'job' is specified, the instance will automatically cease when the job is completed or canceled. </remarks>
@@ -42,12 +42,20 @@ public sealed class KokoroPlayback : IDisposable {
     /// <summary> Enqueues specified audio samples for playback. They will be played once all previously queued samples have been played. </summary>
     public void Enqueue(float[] samples) => queuedSamples.Enqueue(samples);
 
+    /// <summary> Stops the playback of the currently playing samples. The next samples that are queued (if any) will begin playing immediately. </summary>
+    /// <remarks> Note that this will NOT completely stop this instance from playing audio. To completely stop this, call the `Dispose()` method. </remarks>
+    public void StopPlayback() => waveOut.Stop();
+
+    /// <summary> Adjust the volume of the playback. [0.0, to 1.0] </summary>
+    public void SetVolume(float volume) => waveOut.Volume = Math.Clamp(volume, 0f, 1f);
+
     /// <summary> Immediately stops the playback and notifies the background worker thread to exit. </summary>
     /// <remarks> Note that this DOES NOT terminate any <see cref="KokoroJob"/>s related to this instance. </remarks>
     public void Dispose() {
         hasExited = true;
         waveOut.Stop();
         waveOut.Dispose();
+        queuedSamples.Clear();
     }
 
     /// <summary> Performs some pre-processing on target samples, like trimming silence, and discarding potential noise. </summary>
@@ -60,6 +68,7 @@ public sealed class KokoroPlayback : IDisposable {
 
         float[] trimmedSamples = new float[end - start + 1];
         Array.Copy(samples, start, trimmedSamples, 0, trimmedSamples.Length);
+        if (trimmedSamples.Length == 0) { return samples; }
         return trimmedSamples;
     }
 

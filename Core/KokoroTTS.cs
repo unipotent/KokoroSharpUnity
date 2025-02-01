@@ -17,7 +17,7 @@ public sealed class KokoroTTS : IDisposable {
     /// <summary> Creates a new Kokoro TTS Engine instance, loading the model into memory and initializing a background worker thread to continuously scan for newly queued jobs, dispatching them in order, when it's free. </summary>
     /// <remarks> If 'options' is specified, the model will be loaded with them. This is particularly useful when needing to run on non-CPU backends, as the default backend otherwise is the CPU with 8 threads. </remarks>
     public KokoroTTS(string modelPath, SessionOptions options = null) {
-        model = new(modelPath, options);
+        model = new KokoroModel(modelPath, options);
 
         new Thread(async () => {
             while (!hasExited) {
