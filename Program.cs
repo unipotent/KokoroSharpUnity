@@ -8,7 +8,7 @@ internal class Program {
     // .. keeping this outside the 'Main' method for hot-reload support.
     static (int a, int b) Mix => (2, 10);
 
-    static void Main(string[] args) {
+    static void Main(string[] _) {
         // You'll need to download the model first. You can find it in https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0.
         KokoroTTS tts = new(@"kokoro.onnx"); // The high level inference engine provided by KokoroSharp. We instantiate once, cache it, and reuse it.
         KokoroVoiceManager.LoadVoicesFromPath("voices"); // The models are pre-bundled with the package, but they still need to be loaded manually.
