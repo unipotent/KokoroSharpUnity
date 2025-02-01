@@ -3,10 +3,11 @@
 using Microsoft.ML.OnnxRuntime;
 
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 /// <summary> Highest level module that allows easy inference with the model. </summary>
 /// <remarks> Contains a background worker thread that dispatches queued jobs/actions linearly. </remarks>
-public class KokoroTTS : IDisposable {
+public sealed class KokoroTTS : IDisposable {
     readonly KokoroModel model;
     readonly ConcurrentQueue<KokoroJob> queuedJobs = [];
 
@@ -42,9 +43,10 @@ public class KokoroTTS : IDisposable {
     /// <remarks> This is the simplest, highest-level version of the interface. For more fine-grained controls, see <see cref="EnqueueJob(KokoroJob)"/>.</remarks>
     /// <param name="text"> The text to speak. </param>
     /// <param name="voice"> The voice that will speak it. Can also be a <see cref="KokoroVoice"/>. </param>
-    public void Speak(string text, float[,,] voice) {
+    public void Speak(string text, KokoroVoice voice) {
         StopPlayback();
-        var tokens = Tokenizer.Tokenize(text);
+        var tokens = Tokenizer.Tokenize(text, voice.GetLangCode());
+        if (FallbackToSpeakFastIfNeeded(text, voice, tokens)) { return; }
         var job = EnqueueJob(KokoroJob.Create(tokens, voice, 1, null));
         activePlayback = new KokoroPlayback(job);
         foreach (var step in job.Steps) { step.OnStepComplete = activePlayback.Enqueue; }
@@ -54,9 +56,9 @@ public class KokoroTTS : IDisposable {
     /// <remarks> This is the simplest, highest-level version of the interface. For more fine-grained controls, see <see cref="EnqueueJob(KokoroJob)"/>.</remarks>
     /// <param name="text"> The text to speak. </param>
     /// <param name="voice"> The voice that will speak it. Can also be a <see cref="KokoroVoice"/>. </param>
-    public void SpeakFast(string text, float[,,] voice) {
+    public void SpeakFast(string text, KokoroVoice voice) {
         StopPlayback();
-        var tokens = Segmentation.SplitToSegments(Tokenizer.Tokenize(text));
+        var tokens = Segmentation.SplitToSegments(Tokenizer.Tokenize(text, voice.GetLangCode()));
         var job = EnqueueJob(KokoroJob.Create(tokens, voice, 1, null));
         activePlayback = new KokoroPlayback(job);
         foreach (var step in job.Steps) { step.OnStepComplete = activePlayback.Enqueue; }
@@ -64,7 +66,7 @@ public class KokoroTTS : IDisposable {
 
     /// <summary> Immediately cancels any ongoing playbacks and requests triggered by any of the "Speak" methods. </summary>
     public void StopPlayback() {
-        activePlayback?.job?.Cancel();
+        activePlayback?.AssignedJob?.Cancel();
         activePlayback?.Dispose();
         activePlayback = null;
     }
@@ -74,7 +76,15 @@ public class KokoroTTS : IDisposable {
     public void Dispose() {
         hasExited = true;
         StopPlayback();
+        foreach (var job in queuedJobs) { job.Cancel(); }
         queuedJobs.Clear();
         model.Dispose();
+    }
+
+    bool FallbackToSpeakFastIfNeeded(string text, KokoroVoice voice, int[] tokens) {
+        if (tokens.Length <= KokoroModel.maxTokens) { return false; }
+        Debug.WriteLine($"Max token count the model supports is {KokoroModel.maxTokens}, but got {tokens.Length}. Defaulting to automatic segmentation.");
+        SpeakFast(text, voice);
+        return true;
     }
 }

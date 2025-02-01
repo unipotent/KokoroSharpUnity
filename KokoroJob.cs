@@ -12,12 +12,12 @@ public class KokoroJob {
     public int StepIndex { get; private set; }
 
     /// <summary> Will be true if the job was either canceled or completed. </summary>
-    public bool isDone => State == KokoroJobState.Completed || State == KokoroJobState.Canceled;
+    public virtual bool isDone => State == KokoroJobState.Completed || State == KokoroJobState.Canceled;
 
 
     /// <summary> Progresses the job by processing the next job step, and returns the model's output (audio samples). </summary>
     /// <remarks> Users will typically never need to call this manually, as it's handled by the <see cref="KokoroTTS"/> instance. </remarks>
-    public void Progress(KokoroModel model) {
+    public virtual void Progress(KokoroModel model) {
         if (State == KokoroJobState.Canceled) { return; }
         if (StepIndex >= Steps.Count) { State = KokoroJobState.Completed; return; }
         if (StepIndex == 0) { State = KokoroJobState.Running; }
@@ -32,7 +32,7 @@ public class KokoroJob {
     }
 
     /// <summary> Marks the job as canceled. Canceled jobs will not run, and will not trigger their callback if they happen to be running. </summary>
-    public void Cancel() => State = KokoroJobState.Canceled;
+    public virtual void Cancel() => State = KokoroJobState.Canceled;
 
     /// <summary> Creates a single-step job. When the step is completed, the callback will be invoked with the output waveform. </summary>
     public static KokoroJob Create(int[] tokens, float[,,] voiceStyle, float speed, Action<float[]> OnComplete) => new() { Steps = [new(tokens, voiceStyle, speed, OnComplete)] };

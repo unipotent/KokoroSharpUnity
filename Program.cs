@@ -6,7 +6,7 @@ internal class Program {
 
     // Mixing voice A with B in this example, but you can mix numerous voices together.
     // .. keeping this outside the 'Main' method for hot-reload support.
-    static (int a, int b) mix => (2, 10);
+    static (int a, int b) Mix => (2, 10);
 
     static void Main(string[] args) {
         // You'll need to download the model first. You can find it in https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0.
@@ -17,9 +17,10 @@ internal class Program {
 
         while (true) {
             string txt = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(txt)) { continue; }
 
             // The easiest way to perform inference with Kokoro model.
-            tts.SpeakFast(txt, KokoroVoiceManager.Mix([(kore, mix.a), (nicole, mix.b)]));   // Segmented with various rules (see `Segmentation.cs`). Getting an ~instant response, with a potential quality hit.
+            tts.SpeakFast(txt, KokoroVoiceManager.Mix([(kore, Mix.a), (nicole, Mix.b)]));   // Segmented with various rules (see `Segmentation.cs`). Getting an ~instant response, with a potential quality hit.
             //tts.Speak(txt, KokoroVoiceManager.Mix([(kore, mix.a), (nicole, mix.b)]));     // Without segmentations; increasing the playback response time, but may offer increased quality.
 
             // Although, what's MORE SUITABLE for more advanced tasks, is the `tts.EnqueueJob` method,
@@ -36,7 +37,7 @@ internal class Program {
             KokoroPlayback playback = new KokoroPlayback();
             
             // Can inference with a 1D token array, waiting until the full inference completes before hearing back (up to 510 tokens).
-            tts.EnqueueJob(KokoroJob.Create(tokens, KokoroVoiceManager.Mix([(kore, mix.a), (nicole, mix.b)]), speed:0.8f, playback.Enqueue));
+            tts.EnqueueJob(KokoroJob.Create(tokens, KokoroVoiceManager.Mix([(kore, Mix.a), (nicole, Mix.b)]), speed:0.8f, playback.Enqueue));
 
             // Or with 2D token array, processing them segment-by-segment, hearing back as quickly as possible (same with `tts.SpeakFast()`).
             // .. 2D arrays are not restricted by the 510 token limit, because none of the segments will surpass that.

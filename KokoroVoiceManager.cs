@@ -5,53 +5,59 @@ using NumSharp;
 /// <summary> Helper module responsible for holding Kokoro Voices and making them accessible for retrieval by name. </summary>
 /// <remarks> Also contains methods that allows mixing voices with each other to create new voices with shared characteristics. </remarks>
 public static class KokoroVoiceManager {
-    public static List<KokoroVoice> Voices { get; } = new();
+    public static List<KokoroVoice> Voices { get; } = [];
 
     /// <summary> Gathers and loads all voices on the specified path. Loaded voices can be accessed via <see cref="GetVoice(string)"/>. </summary>
-    /// <remarks> If 'languages' is specified, voices of languages different than the ones listed will be ignored. </remarks>
-    public static void LoadVoicesFromPath(string voicesPath = "voices", IEnumerable<KokoroLanguage> languages = null, KokoroGender gender = KokoroGender.Both) {
+    /// <remarks> This part is not automated in case developers want to ship their project with custom paths or voice loading logic. </remarks>
+    public static void LoadVoicesFromPath(string voicesPath = "voices") {
         IEnumerable<string> files = Directory.GetFiles(voicesPath);
-        if (languages != null) { files = files.Where(x => languages.Any(l => x.StartsWith(l.AsString()))); }
-        if (gender != KokoroGender.Both) { files = files.Where(x => x[1] == (char) gender); }
 
         foreach (var filePath in files) {
             var voiceName = Path.GetFileNameWithoutExtension(filePath);
-            if (Voices.Any(x => x.Name == voiceName)) { continue; }
-
             var voiceFeatures = np.Load<float[,,]>(filePath);
             Voices.Add(new() { Name = voiceName, Features = voiceFeatures });
         }
     }
 
-    /// <summary> Retrieves a registered voice by name. </summary>
+    /// <summary> Retrieves a registered voice by name, including the language and gender prefix. </summary>
     /// <remarks> Customly mixed voices will not be considered unless named and added to <see cref="Voices"/>. </remarks>
     public static KokoroVoice GetVoice(string name) => Voices.FirstOrDefault(x => x.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
 
+    /// <summary> Allows retrieving voices that can speak fluently in the specified language. </summary>
+    /// /// <remarks> If 'gender' is specified, voices of different genders than the one specified will be ignored. </remarks>
+    public static List<KokoroVoice> GetVoices(KokoroLanguage language, KokoroGender gender = KokoroGender.Both) => GetVoices([language], gender);
 
+    /// <summary> Allows retrieving voices that can speak fluently in the specified languages. </summary>
+    /// <remarks> If 'gender' is specified, voices of different genders than the one specified will be ignored. </remarks>
+    public static List<KokoroVoice> GetVoices(IEnumerable<KokoroLanguage> languages, KokoroGender gender = KokoroGender.Both) {
+        var selectedVoices = Voices.FindAll(x => languages.Contains(x.GetLanguage()));
+        if (gender != KokoroGender.Both) { selectedVoices.RemoveAll(x => x.Name[1] != (char) gender); }
+        return selectedVoices;
+    }
 
     /// <summary>
     /// <para> Mixes the given voices together with their weights, to produce a new voice. There is no limit on how many voices this can accept. </para>
     /// <para> The *weight* for each voice will determine its contribution to the output voice, which will be normalized based on the sum of all weights. </para>
     /// <para> The formula that's used is <b>NewVoice = (λa * A) + (λb * B) + ... + (λn * N)</b>, where <b>λ</b> are the normalized weights. </para>
     /// </summary>
+    /// <remarks> The output voice's name will be <b>"xx_mix"</b>, where <b>xx</b> is the prefix of the first voice's name. If you're going for a different language, rename the voice after the operation. </remarks>
     public static KokoroVoice Mix(params (KokoroVoice voice, float weight)[] voices) {
         var f = voices[0].voice.Features;
         var (w, h, d) = (f.GetLength(0), f.GetLength(1), f.GetLength(2));
 
-        var totalWeight = voices.Sum(x => x.weight);
-        var weights = voices.Select(x => x.weight / totalWeight).ToArray();
+        var summedWeights = voices.Sum(x => x.weight);
+        var normedWeights = voices.Select(x => x.weight / summedWeights).ToArray();
 
         var newArray = np.zeros_like(voices[0].voice.Features);
-        for (int i = 0; i < voices.Length; i++) { newArray += np.array(voices[i].voice.Features) * weights[i]; }
+        for (int i = 0; i < voices.Length; i++) { newArray += np.array(voices[i].voice.Features) * normedWeights[i]; }
         var newFeatures = newArray.reshape(new Shape(w, h, d)).ToMuliDimArray<float>() as float[,,];
-        return new KokoroVoice() { Name = "", Features = newFeatures };
+
+        // Try to infer the name. This is crucial to preserve
+        var name = (voices[0].voice.Name.Length >= 3) ? $"{voices[0].voice.Name[..2]}_mix" : "am_mix";
+        return new KokoroVoice() { Name = name, Features = newFeatures };
     }
 
     /// <summary> Mixes the two voices with formula <b>NewVoice = (λa * A) + (λb * B)</b>, where <b>λ</b> are the normalized weights. </summary>
     /// <remarks> For more fine-grained control and mixing multiple voices in one go, see <b>KokoroVoiceManager.Mix(..)</b>. </remarks>
-    public static KokoroVoice MixWith(this KokoroVoice A, KokoroVoice B, float λa = 0.5f, float λb = 0.5f) => Mix([(A, λb), (B, λb)]);
-
-    /// <summary> Converts the enum value to its *language representation char*. </summary>
-    /// <remarks> That char can be used as a filter to grab voices from that language. </remarks>
-    public static string AsString(this KokoroLanguage lang) => ((char) lang).ToString();
+    public static KokoroVoice MixWith(this KokoroVoice A, KokoroVoice B, float wA = 0.5f, float wB = 0.5f) => Mix([(A, wA), (B, wB)]);
 }

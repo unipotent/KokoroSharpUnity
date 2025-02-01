@@ -4,14 +4,15 @@ using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 /// <summary> An instance of the model in the ONNX runtime. For a higher level module, see <see cref="KokoroTTS"/>. </summary>
 /// <remarks> Once instantiated, the model will remain loaded and be ready to be reused for inference with new parameters. </remarks>
-public class KokoroModel : IDisposable {
+public sealed class KokoroModel : IDisposable {
     readonly InferenceSession session;
     readonly SessionOptions defaultOptions = new() { EnableMemoryPattern = true, InterOpNumThreads = 8, IntraOpNumThreads = 8 };
 
-    const int maxTokens = 510;
+    public const int maxTokens = 510;
 
     public KokoroModel(string modelPath, SessionOptions options = null) {
         session = new InferenceSession(modelPath, options ?? defaultOptions);
@@ -22,7 +23,10 @@ public class KokoroModel : IDisposable {
     /// <remarks> Synchronously waits for the output (audio samples), and returns them when ready. Best used in async context. </remarks>
     public float[] Infer(int[] tokens, float[,,] voiceStyle, float speed = 1) {
         var (B, T, C) = (1, tokens.Length, voiceStyle.GetLength(2));
-        if (tokens.Length > maxTokens) { Array.Resize(ref tokens, T = maxTokens); }
+        if (tokens.Length > maxTokens) {
+            Debug.WriteLine($"Max token count the model supports is {maxTokens}, but got {tokens.Length}. Please segment your input when passing longer sequences. Trimming to {maxTokens}.");
+            Array.Resize(ref tokens, T = maxTokens);
+        }
 
         var tokenTensor = new DenseTensor<long>([B, T + 2]); // <start>{text}<end>
         var styleTensor = new DenseTensor<float>([B, C]); // Voice features

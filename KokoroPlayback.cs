@@ -5,23 +5,25 @@ using System.Collections.Concurrent;
 
 /// <summary> Helper class that can simplify audio playback from Kokoro Inference Jobs. Can be either reused or live with a specific KokoroJob instance. </summary>
 /// <remarks> Internally hosts a background worker thread that keeps checking for any queued samples, and plays them back if there's nothing else playing, in the same order they were queued. </remarks>
-public class KokoroPlayback : IDisposable {
+public sealed class KokoroPlayback : IDisposable {
     readonly WaveFormat waveFormat = new(24000, 16, 1);
     readonly WaveOutEvent waveOut = new();
     readonly ConcurrentQueue<float[]> queuedSamples = [];
 
     volatile bool hasExited;
 
-    public KokoroJob job { get; }
+    /// <summary> The job (if any) whose lifetime this KokoroPlayback instance lives with. Can be null for long-term instances. </summary>
+    /// <remarks> Once that job is done and the playback completes, the KokoroPlayback instance will be automatically disposed. </remarks>
+    public KokoroJob AssignedJob { get; }
 
-    /// <summary> If true, the output audio of the model will be nicified before being played back. </summary>
+    /// <summary> If true, the output audio of the model will be *nicified* before being played back. </summary>
     /// <remarks> Nicification includes trimming silent start and finish, and attempting to reduce noise. </remarks>
     public static bool NicifySamples { get; set; }
 
     /// <summary> Creates an audio playback instance, and causes it to automatically play back all samples added via <see cref="Enqueue(float[])"/>. </summary>
     /// <remarks> If 'job' is specified, the instance will automatically cease when the job is completed or canceled. </remarks>
     public KokoroPlayback(KokoroJob job = null) {
-        this.job = job;
+        AssignedJob = job;
 
         new Thread(async () => {
             while (!hasExited) {
