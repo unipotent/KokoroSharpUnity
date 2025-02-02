@@ -1,6 +1,8 @@
 <Project>
-    <ItemGroup>
-        <Content Include="$(MSBuildThisFileDirectory)..\voices\**" CopyToOutputDirectory="PreserveNewest" Link="voices\%(RecursiveDir)%(FileName)%(Extension)"/>
-        <Content Include="$(MSBuildThisFileDirectory)..\espeak\**" CopyToOutputDirectory="PreserveNewest" Link="espeak\%(RecursiveDir)%(FileName)%(Extension)"/>
-    </ItemGroup>
+    <Target Name="CopyContent" AfterTargets="Build">
+        <ItemGroup>
+            <Files Include="$(MSBuildThisFileDirectory)..\content\**\*" />
+        </ItemGroup>
+        <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(OutputPath)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
 </Project>
