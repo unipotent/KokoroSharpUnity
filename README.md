@@ -22,7 +22,6 @@ With a custom phonemization solution, these additional languages are also suppor
 ## How to setup
 ###### You can download the Kokoro v1.0 ONNX models from [taylorchu's repository's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0).
 - **On Windows:** Install via **Nuget** ([Package Manager](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-in-visual-studio) or [CLI](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli)), then [download the ONNX model](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0), and you're set!
-- (^ There are known issues regarding automation of `espeak-ng`. Please also [Download and install espeak-ng](https://github.com/espeak-ng/espeak-ng/releases))
 - **On Linux and MacOS**: In addition to the above, you will need to manually install eSpeak NG for phonemization support. Installation instructions can be found on the [eSpeak NG GitHub repository](https://github.com/espeak-ng/espeak-ng).
 - **On Other platforms**: For platforms other than the ones above, developers are expected to provide their own phonemization solution. The built-in tokenizer supports raw `(phonemes -> tokens)` conversion.
 

@@ -17,10 +17,6 @@ public static class Tokenizer {
     public static IReadOnlyDictionary<int, char> TokenToChar { get; }
     public static HashSet<int> PunctuationTokens { get; }
 
-    /// <summary> Toggle to 'true' to disable automatic assignment of the WorkingDirectory when invoking the espeak-ng process.. </summary>
-    /// <remarks> This will force the process to use any `espeak-ng` available on your system when calling <see cref="Phonemize_Internal(string, string)"/>. </remarks>
-    public static bool ForceEmptyWorkingDirectory { get; set; }
-
     static Tokenizer() {
         var symbols = new List<char>();
         symbols.Add('$'); // <pad> token
@@ -59,13 +55,11 @@ public static class Tokenizer {
     /// <summary> Invokes the espeak-ng via command line, to convert given text into phonemes. </summary>
     /// <remarks> Espeak will return a line ending when it meets any of the <see cref="PunctuationTokens"/> and gets rid of any punctuation, so these will have to be converted back to a single-line, with the punctuation restored. </remarks>
     static string Phonemize_Internal(string text, string langCode = "en-us") {
-        var targetWorkingDir = @$"{Directory.GetCurrentDirectory()}\espeak";
-        if (!File.Exists("espeak/espeak-ng.exe") || !OperatingSystem.IsWindows() || ForceEmptyWorkingDirectory) { targetWorkingDir = null; }
-
+        var espeak_cli_path = OperatingSystem.IsWindows() ? @$"{Directory.GetCurrentDirectory()}\espeak\espeak-ng" : "espeak-ng";
         using var process = new Process() {
             StartInfo = new ProcessStartInfo() {
-                FileName = "espeak-ng",
-                WorkingDirectory = targetWorkingDir,
+                FileName = espeak_cli_path,
+                WorkingDirectory = null,
                 Arguments = $"--ipa=3 -q -v {langCode} \"{text}\"",
                 RedirectStandardInput = false,
                 RedirectStandardOutput = true,
@@ -74,6 +68,7 @@ public static class Tokenizer {
                 StandardOutputEncoding = Encoding.UTF8
             }
         };
+        process.StartInfo.EnvironmentVariables.Add("ESPEAK_DATA_PATH", @$"{Directory.GetCurrentDirectory()}\espeak\espeak-ng-data");
         process.Start();
         var phonemeList = process.StandardOutput.ReadToEnd();
         process.StandardOutput.Close();
