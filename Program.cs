@@ -1,5 +1,8 @@
 ﻿namespace KokoroSharp;
 
+using KokoroSharp.Core;
+using KokoroSharp.Tokenization;
+
 using System.Diagnostics;
 
 /// <summary> Sample test program that reads the console line, then plays it back with the voice. </summary>
@@ -12,7 +15,7 @@ internal class Program {
 
     static void Main(string[] _) {
         // You'll need to download the model first. You can find it in https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0.
-        using KokoroTTS tts = new(@"kokoro.onnx"); // The high level inference engine provided by KokoroSharp. We instantiate once, cache it, and reuse it.
+        using KokoroTTS tts = new(@"kokoro.onnx") { NicifyAudio = true }; // The high level inference engine provided by KokoroSharp. We instantiate once, cache it, and reuse it.
         KokoroVoiceManager.LoadVoicesFromPath("voices"); // The models are pre-bundled with the package, but they still need to be loaded manually.
         KokoroVoice sarah = KokoroVoiceManager.GetVoice("af_sarah"); // Once the voices are loaded, they can be retrieved instantly from memory.
         KokoroVoice nicole = KokoroVoiceManager.GetVoice("af_nicole"); // Kokoro always needs a voice for inference.
@@ -21,6 +24,11 @@ internal class Program {
         foreach (var voice in KokoroVoiceManager.Voices) { Debug.WriteLine(voice.Name); }
         foreach (var voice in KokoroVoiceManager.GetVoices(KokoroLanguage.AmericanEnglish)) { Debug.WriteLine(voice.Name); }
         tts.Speak("Welcome.", KokoroVoiceManager.GetVoice("af_heart")); // ..and synthesize speech with one line of code!
+
+        // We can retrieve various callbacks from speech to stay informed:
+        tts.OnSpeechProgressed += (p) => Debug.WriteLine($"Progress:  {new string(p.PhonemesSpoken)}");
+        tts.OnSpeechCompleted += (c) => Debug.WriteLine($"Completed: {new string(c.PhonemesSpoken)}");
+        tts.OnSpeechCanceled += (c) => Debug.WriteLine($"Canceled:  {new string(c.PhonemesSpoken_BestGuess)}");
 
         while (true) {
             Console.Write("Type text to speak: ");
@@ -45,6 +53,8 @@ internal class Program {
             playback.NicifySamples = true; // Optionally, trim the otherwise silent samples, for even faster responses.
 
             // From here on, these will enqueue to the same `playback` instance, ensuring audio will not overlap.
+            // Also, the callbacks are built-in inside `KokoroTTS`, so if you want them, you'd have to create your own.
+            // Feel free to check out how it's done there, use it as an example, and tweak it to your liking!
             int[] tokens = Tokenizer.Tokenize(txt); // (1D array)
             List<int[]> ttokens = Segmentation.SplitToSegments(tokens, minFollowupSegmentsLength: 300); // (2D array)
 

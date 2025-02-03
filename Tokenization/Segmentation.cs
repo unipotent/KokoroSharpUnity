@@ -1,4 +1,4 @@
-﻿namespace KokoroSharp;
+﻿namespace KokoroSharp.Tokenization;
 
 using static Tokenizer;
 

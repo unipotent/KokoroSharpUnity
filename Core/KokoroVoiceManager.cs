@@ -1,4 +1,4 @@
-﻿namespace KokoroSharp;
+﻿namespace KokoroSharp.Core;
 
 using NumSharp;
 

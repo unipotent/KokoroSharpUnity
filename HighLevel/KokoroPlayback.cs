@@ -1,5 +1,7 @@
 ﻿namespace KokoroSharp;
 
+using KokoroSharp.Core;
+
 using NAudio.Wave;
 using System.Collections.Concurrent;
 
@@ -8,39 +10,54 @@ using System.Collections.Concurrent;
 public sealed class KokoroPlayback : IDisposable {
     public static readonly WaveFormat waveFormat = new(24000, 16, 1);
     readonly WaveOutEvent waveOut = new();
-    readonly ConcurrentQueue<float[]> queuedSamples = [];
+    readonly ConcurrentQueue<PlaybackHandle> queuedPackets = [];
 
     volatile bool hasExited;
 
     /// <summary> The job (if any) whose lifetime this KokoroPlayback instance lives with. Can be null for long-term instances. </summary>
     /// <remarks> Once that job is done and the playback completes, the KokoroPlayback instance will be automatically disposed. </remarks>
-    public KokoroJob AssignedJob { get; }
+    public KokoroJob AssignedJob { get; init; }
 
     /// <summary> If true, the output audio of the model will be *nicified* before being played back. </summary>
     /// <remarks> Nicification includes trimming silent start and finish, and attempting to reduce noise. </remarks>
     public bool NicifySamples { get; set; }
 
-    /// <summary> Creates an audio playback instance, and causes it to automatically play back all samples added via <see cref="Enqueue(float[])"/>. </summary>
+    /// <summary> Creates a background audio playback instance, and causes it to automatically play back all samples added via <see cref="Enqueue(float[])"/>. </summary>
     /// <remarks> If 'job' is specified, the instance will automatically cease when the job is completed or canceled. </remarks>
-    public KokoroPlayback(KokoroJob job = null) {
-        AssignedJob = job;
-
+    public KokoroPlayback() {
         new Thread(async () => {
             while (!hasExited) {
                 await Task.Delay(100);
-                while (!hasExited && queuedSamples.TryDequeue(out var f)) {
-                    if (NicifySamples) { f = PostProcessSamples(f); }
-                    waveOut.Init(new RawSourceWaveStream(GetBytes(f), 0, f.Length * 2, waveFormat));
-                    waveOut.Play();
-                    while (!hasExited && waveOut.PlaybackState == PlaybackState.Playing) { await Task.Delay(10); }
+                while (!hasExited && queuedPackets.TryDequeue(out var packet)) {
+                    if (packet.Aborted) { continue; }
+
+                    var (samples, startTime) = (packet.Samples, DateTime.Now);
+                    packet.OnStarted?.Invoke();
+                    if (NicifySamples) { samples = PostProcessSamples(samples); }
+
+                    var stream = new RawSourceWaveStream(GetBytes(samples), 0, samples.Length * 2, waveFormat);
+                    waveOut.Init(stream); waveOut.Play(); // Initialize and play the audio stream, then wait until it's done.
+                    while (!hasExited && !packet.Aborted && waveOut.PlaybackState == PlaybackState.Playing) { await Task.Delay(10); }
+
+                    // Once playback finished, invoke the correct callback.
+                    if (stream.Position == stream.Length) { packet.OnSpoken?.Invoke(); }
+                    else { packet.OnCanceled?.Invoke(((float) (DateTime.Now - startTime).TotalSeconds, (float) (stream.Position / (float) stream.Length))); }
                 }
-                if (queuedSamples.IsEmpty && job?.isDone == true) { Dispose(); }
+                if (queuedPackets.IsEmpty && AssignedJob?.isDone == true) { Dispose(); }
             }
         }).Start();
     }
 
     /// <summary> Enqueues specified audio samples for playback. They will be played once all previously queued samples have been played. </summary>
-    public void Enqueue(float[] samples) => queuedSamples.Enqueue(samples);
+    public void Enqueue(float[] samples) => Enqueue(samples, null, null);
+
+    /// <summary> Enqueues specified audio samples for playback. They will be played once all previously queued samples have been played. </summary>
+    /// <remarks> The callbacks will be raised appropriately during playback. Note that "Cancel" will STILL be raised with (0f,0%) for packets that were canceled before being played. </remarks>
+    internal PlaybackHandle Enqueue(float[] samples, Action OnStarted = null, Action OnSpoken = null, Action<(float time, float percentage)> OnCanceled = null) {
+        var packet = new PlaybackHandle(samples, OnStarted, OnSpoken, OnCanceled);
+        queuedPackets.Enqueue(packet);
+        return packet;
+    }
 
     /// <summary> Stops the playback of the currently playing samples. The next samples that are queued (if any) will begin playing immediately. </summary>
     /// <remarks> Note that this will NOT completely stop this instance from playing audio. To completely stop this, call the `Dispose()` method. </remarks>
@@ -55,7 +72,8 @@ public sealed class KokoroPlayback : IDisposable {
         hasExited = true;
         waveOut.Stop();
         waveOut.Dispose();
-        queuedSamples.Clear();
+        foreach (var p in queuedPackets) { p.OnCanceled?.Invoke((0f, 0f)); }
+        queuedPackets.Clear();
     }
 
     /// <summary> Performs some pre-processing on target samples, like trimming silence, and discarding potential noise. </summary>

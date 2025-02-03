@@ -1,4 +1,4 @@
-﻿namespace KokoroSharp;
+﻿namespace KokoroSharp.Core;
 
 using System.Linq;
 
@@ -46,9 +46,9 @@ public class KokoroJob {
     /// <summary> An instance of an inference step of a KokoroJob. This typically contains a segment (part of the whole input). </summary>
     /// <remarks> All steps are performed in order, and will block execution of future staps and jobs, enabling linear scheduling. </remarks>
     public class KokoroJobStep {
-        public float Speed { get; set; }
-        public int[] Tokens { get; set; }
-        public float[,,] VoiceStyle { get; set; }
+        public float Speed { get; init; }
+        public int[] Tokens { get; init; }
+        public float[,,] VoiceStyle { get; init; }
 
         /// <summary> Gets invoked after this step is fully processed by the engine, with an array of the output audio samples as parameter. </summary>
         public Action<float[]> OnStepComplete { get; set; }

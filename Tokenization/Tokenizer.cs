@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
+﻿namespace KokoroSharp.Tokenization;
+
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-
-namespace KokoroSharp;
 
 /// <summary> A static module responsible for tokenization converting plaintext to phonemes, and phonemes to tokens. </summary>
 /// <remarks>
@@ -48,13 +48,13 @@ public static class Tokenizer {
     /// <summary> Converts the input text into the corresponding phonemes, with slight preprocessing and post-processing to preserve punctuation and other TTS essentials. </summary>
     static string Phonemize(string inputText, string langCode, bool preprocess = true) {
         var preprocessedText = preprocess ? PreprocessText(inputText) : inputText;
-        var phonemeList = Phonemize_Internal(preprocessedText, langCode).Split('\n');
+        var phonemeList = Phonemize_Internal(preprocessedText, out _, langCode).Split('\n');
         return PostProcessPhonemes(preprocessedText, phonemeList, langCode);
     }
 
     /// <summary> Invokes the espeak-ng via command line, to convert given text into phonemes. </summary>
     /// <remarks> Espeak will return a line ending when it meets any of the <see cref="PunctuationTokens"/> and gets rid of any punctuation, so these will have to be converted back to a single-line, with the punctuation restored. </remarks>
-    static string Phonemize_Internal(string text, string langCode = "en-us") {
+    static string Phonemize_Internal(string text, out string originalSegments, string langCode = "en-us") {
         var espeak_cli_path = OperatingSystem.IsWindows() ? @$"{Directory.GetCurrentDirectory()}\espeak\espeak-ng" : "espeak-ng";
         using var process = new Process() {
             StartInfo = new ProcessStartInfo() {
@@ -70,10 +70,10 @@ public static class Tokenizer {
         };
         process.StartInfo.EnvironmentVariables.Add("ESPEAK_DATA_PATH", @$"{Directory.GetCurrentDirectory()}\espeak\espeak-ng-data");
         process.Start();
-        var phonemeList = process.StandardOutput.ReadToEnd();
+        originalSegments = process.StandardOutput.ReadToEnd();
         process.StandardOutput.Close();
 
-        return phonemeList.Replace("\r\n", "\n").Trim();
+        return originalSegments.Replace("\r\n", "\n").Trim();
     }
 
     /// <summary> Normalizes the input text to what the Kokoro model would expect to see, preparing it for phonemization. </summary>

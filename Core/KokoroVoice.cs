@@ -1,4 +1,4 @@
-﻿namespace KokoroSharp;
+﻿namespace KokoroSharp.Core;
 
 /// <summary> A Kokoro Voice instance, holding the speaker embeddings that *colors* the spoken text with specific characteristics. </summary>
 /// <remarks> You can use the <b>KokoroVoiceManager.Mix(...)</b> method to create new voices out of the existing ones. </remarks>

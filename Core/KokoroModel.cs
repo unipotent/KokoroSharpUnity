@@ -1,4 +1,4 @@
-﻿namespace KokoroSharp;
+﻿namespace KokoroSharp.Core;
 
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
