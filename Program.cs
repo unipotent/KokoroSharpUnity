@@ -27,9 +27,9 @@ internal class Program {
 
         // You can access and subscribe to various callbacks regarding speech to stay informed:
         tts.OnSpeechStarted    += (s) => Debug.WriteLine($"Started:   {new string(s.PhonemesToSpeak)}");
-        tts.OnSpeechProgressed += (p) => Debug.WriteLine($"Progress:  {new string(p.PhonemesSpoken)}");
+        tts.OnSpeechProgressed += (p) => Debug.WriteLine($"Progress:  {new string(p.SpokenText_BestGuess)}");
         tts.OnSpeechCompleted  += (c) => Debug.WriteLine($"Completed: {new string(c.PhonemesSpoken)}");
-        tts.OnSpeechCanceled   += (c) => Debug.WriteLine($"Canceled:  {new string(c.PhonemesSpoken_BestGuess)}");
+        tts.OnSpeechCanceled   += (c) => Debug.WriteLine($"Canceled:  {new string(c.SpokenText_BestGuess)}");
 
         while (true) {
             Console.Write("Type text to speak: ");
@@ -57,7 +57,7 @@ internal class Program {
             // Also, the callbacks are built-in inside `KokoroTTS`, so if you want them, you'd have to create your own.
             // Feel free to check out how it's done there, use it as an example, and tweak it to your liking!
             int[] tokens = Tokenizer.Tokenize(txt); // (1D array)
-            List<int[]> ttokens = Segmentation.SplitToSegments(tokens, minFollowupSegmentsLength: 300); // (2D array)
+            List<int[]> ttokens = SegmentationSystem.SplitToSegments(tokens, minFollowupSegmentsLength: 300); // (2D array)
 
 
             // Mixing voices is easy, and you can mix as many as you want together, even ones intended for different languages!

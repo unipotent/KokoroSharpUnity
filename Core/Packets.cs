@@ -35,7 +35,7 @@ public struct SpeechProgressPacket {
 }
 
 /// <summary> Callback packet that gets sent when the speech playback was interrupted. </summary>
-/// <remarks> Note that "Cancel" will STILL be raised with (0f,0%) for packets that were canceled before being played. </remarks>
+/// <remarks> Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
 public struct SpeechCancelationPacket {
 
     /// <summary> The phonemes that were spoken since the beginning of this speech/KokoroJob. </summary>
@@ -74,4 +74,29 @@ public struct SpeechCompletionPacket {
 
     /// <summary> The Kokoro Job Step this speech packet is connected to. </summary>
     public KokoroJob.KokoroJobStep RelatedStep;
+}
+
+/// <summary> A packet that contains info regarding the current state of the speech, helpful for guessing the  </summary>
+public struct SpeechInfoPacket {
+    /// <summary> The whole text that the speech job of interest has to speak. </summary>
+    public string OriginalText;
+
+    /// <summary> ALL tokens of phonemes that the speech job of interest has to speak, nicely segmented. </summary>
+    public List<int[]> AllTokens;
+
+    /// <summary> The phonemes of segment that have been already spoken. </summary>
+    public char[] PreSpokenPhonemes;
+
+    /// <summary> The phonemes of the current segment. </summary>
+    public char[] SegmentPhonemes;
+
+    /// <summary> ALL phonemes that the speech job of interest has to speak. </summary>
+    public char[] AllPhonemes;
+
+    /// <summary> The index of the segment we're trying to guess spoken text for. </summary>
+    public int SegmentIndex;
+
+    /// <summary> The percentage in which the current segment was cut. [0, 1]. </summary>
+    /// <remarks> If the speech was NOT canceled, this should have a value of '1'. </remarks>
+    public float SegmentCutT;
 }

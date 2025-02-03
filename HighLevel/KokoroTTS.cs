@@ -23,7 +23,7 @@ public sealed class KokoroTTS : KokoroEngine {
     public event Action<SpeechCompletionPacket> OnSpeechCompleted;
 
     /// <summary> Callback raised when a segment was aborted, during speech, or before it even started. Can retrieve which parts were spoken, in part or in full. </summary>
-    /// <remarks> Note that "Cancel" will STILL be raised with (0f,0%) for packets that were canceled before being played. </remarks>
+    /// <remarks> Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
     public event Action<SpeechCancelationPacket> OnSpeechCanceled;
 
     /// <summary> If true, the output audio of the model will be *nicified* before being played back. </summary>
@@ -53,7 +53,7 @@ public sealed class KokoroTTS : KokoroEngine {
         activePlayback = new KokoroPlayback() { AssignedJob = job, NicifySamples = NicifyAudio };
 
         var handle = new SynthesisHandle() { Job = job };
-        job.Steps[0].OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, job.Steps[0], job, handle);
+        job.Steps[0].OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, [tokens], job.Steps[0], job, handle);
         return handle;
     }
 
@@ -64,13 +64,13 @@ public sealed class KokoroTTS : KokoroEngine {
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
     public SynthesisHandle SpeakFast(string text, KokoroVoice voice) {
         StopPlayback();
-        var tokens = Segmentation.SplitToSegments(Tokenizer.Tokenize(text, voice.GetLangCode()));
+        var tokens = SegmentationSystem.SplitToSegments(Tokenizer.Tokenize(text, voice.GetLangCode()));
         var job = EnqueueJob(KokoroJob.Create(tokens, voice, 1, null));
         activePlayback = new KokoroPlayback() { AssignedJob = job, NicifySamples = NicifyAudio };
 
         var phonemesCache = new List<char>();
         var handle = new SynthesisHandle() { Job = job };
-        foreach (var step in job.Steps) { step.OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, step, job, handle, phonemesCache); }
+        foreach (var step in job.Steps) { step.OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, tokens, step, job, handle, phonemesCache); }
         return handle;
     }
 
@@ -89,7 +89,7 @@ public sealed class KokoroTTS : KokoroEngine {
 
     /// <summary> This is a callback that gets invoked with the model's outputs (/audio samples) as parameters, once an inference job is complete. </summary>
     /// <remarks> It in turn relays those samples to the <see cref="KokoroPlayback"/> instance, and sets up follow-up callbacks regarding playback progress. </remarks>
-    void EnqueueWithCallbacks(float[] samples, string text, KokoroJob.KokoroJobStep step, KokoroJob job, SynthesisHandle handle, List<char> phonemesCache = null) {
+    void EnqueueWithCallbacks(float[] samples, string text, List<int[]> allTokens, KokoroJob.KokoroJobStep step, KokoroJob job, SynthesisHandle handle, List<char> phonemesCache = null) {
         phonemesCache ??= [];
         var phonemesToSpeak = job.Steps.SelectMany(x => x.Tokens ?? []).Select(x => Tokenizer.TokenToChar[x]).ToArray();
         var playbackHandle = activePlayback.Enqueue(samples, OnStartedCallback, OnCompleteCallback, OnCanceledCallback);
@@ -139,14 +139,15 @@ public sealed class KokoroTTS : KokoroEngine {
         }
         void OnCanceledCallback((float time, float percentage) t) {
             if (OnSpeechCanceled == null && handle.OnSpeechCanceled == null) { return; }
-
+            var percentage = t.percentage;
+            //Debug.WriteLine(percentage + $" --- {job.Steps.IndexOf(step)}");
             // Let's assume the amount of spoken phonemes linearly matches the percentage.
-            var T = (int) Math.Round(step.Tokens.Length * t.percentage); // L * t
+            var T = (int) Math.Round(step.Tokens.Length * percentage); // L * t
             var phonemesSpokenGuess = step.Tokens.Take(T).Select(x => Tokenizer.TokenToChar[x]);
             var cancelationPacket = new SpeechCancelationPacket() {
                 RelatedJob = job,
                 RelatedStep = step,
-                SpokenText_BestGuess = MakeBestGuess(t.percentage, step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray()),
+                SpokenText_BestGuess = MakeBestGuess(percentage, step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray()),
                 PhonemesSpoken_BestGuess = [.. phonemesCache, .. phonemesSpokenGuess],
                 PhonemesSpoken_PrevSegments_Certain = [.. phonemesCache],
                 PhonemesSpoken_LastSegment_BestGuess = [.. phonemesSpokenGuess]
@@ -157,12 +158,15 @@ public sealed class KokoroTTS : KokoroEngine {
         }
 
         string MakeBestGuess(float percentage, char[] segmentPhonemes) {
-            var packet = new GuessPacket() {
+            //Debug.WriteLine(percentage + $" --- {job.Steps.IndexOf(step)}");
+            var packet = new SpeechInfoPacket() {
                 OriginalText = text,
+                AllTokens = allTokens,
                 AllPhonemes = phonemesToSpeak,
                 PreSpokenPhonemes = [.. phonemesCache],
                 SegmentPhonemes = segmentPhonemes,
-                SegmentT = percentage
+                SegmentIndex = job.Steps.IndexOf(step),
+                SegmentCutT = percentage
             };
             return SpeechGuesser.GuessSpeech_LowEffort(packet);
         }

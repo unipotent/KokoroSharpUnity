@@ -4,8 +4,10 @@ using KokoroSharp.Core;
 
 using System;
 
-/// <summary> Contains audio samples and callbacks for playback management. </summary>
-/// <remarks> Used by <see cref="KokoroPlayback"/> to queue and manage audio samples with completion/cancellation tracking. </remarks>
+//public enum KokoroPlaybackHandleState { Queued, InProgress, Completed, Aborted }
+
+/// <summary> Handle for audio samples that are queued to be spoken, and progress callbacks regarding their playback. </summary>
+/// <remarks> Playback of unspoken-yet samples can be aborted, and </remarks>
 public class PlaybackHandle {
     public float[] Samples;
     public Action OnStarted;
@@ -13,8 +15,14 @@ public class PlaybackHandle {
     public Action<(float time, float percentage)> OnCanceled;
 
     public KokoroPlayback Owner { get; init; }
+
+    // TODO: Replace with enum.
     public bool Aborted { get; private set; }
-    public void Abort(bool raiseCancelCallback = true) {
+    public bool Completed { get; set; }
+
+    /// <summary> Abort playback of these samples, marking them as something to never be spoken of. </summary>
+    /// <remarks> Optionally, the `OnCanceled` event can be raised on demand. </remarks>
+    public void Abort(bool raiseCancelCallback = false) {
         Aborted = true;
         if (raiseCancelCallback) { OnCanceled?.Invoke((0f, 0f)); }
     }
@@ -38,7 +46,7 @@ public class SynthesisHandle {
     public Action<SpeechCompletionPacket> OnSpeechCompleted;
 
     /// <summary> Callback raised when a segment was aborted, during speech, or before it even started. Can retrieve which parts were spoken, in part or in full. </summary>
-    /// <remarks> Note that "Cancel" will STILL be raised with (0f,0%) for packets that were canceled before being played. </remarks>
+    /// <remarks> Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
     public Action<SpeechCancelationPacket> OnSpeechCanceled;
 
     /// <summary> The inference job this handle is connected to. </summary>
