@@ -98,7 +98,7 @@ public sealed class KokoroTTS : KokoroEngine {
 
         // Callbacks
         void OnStartedCallback() { // We need to add the SpeechStarted callback, but only to the very first segment.
-            if ((OnSpeechStarted == null && handle.OnSpeechStarted == null) && step != job.Steps[0]) { return; }
+            if ((OnSpeechStarted == null && handle.OnSpeechStarted == null) || step != job.Steps[0]) { return; }
             var startPacket = new SpeechStartPacket() {
                 RelatedJob = job,
                 TextToSpeak = text,
