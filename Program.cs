@@ -25,10 +25,11 @@ internal class Program {
         foreach (var voice in KokoroVoiceManager.GetVoices(KokoroLanguage.AmericanEnglish)) { Debug.WriteLine(voice.Name); }
         tts.Speak("Welcome.", KokoroVoiceManager.GetVoice("af_heart")); // ..and synthesize speech with one line of code!
 
-        // We can retrieve various callbacks from speech to stay informed:
+        // You can access and subscribe to various callbacks regarding speech to stay informed:
+        tts.OnSpeechStarted    += (s) => Debug.WriteLine($"Started:   {new string(s.PhonemesToSpeak)}");
         tts.OnSpeechProgressed += (p) => Debug.WriteLine($"Progress:  {new string(p.PhonemesSpoken)}");
-        tts.OnSpeechCompleted += (c) => Debug.WriteLine($"Completed: {new string(c.PhonemesSpoken)}");
-        tts.OnSpeechCanceled += (c) => Debug.WriteLine($"Canceled:  {new string(c.PhonemesSpoken_BestGuess)}");
+        tts.OnSpeechCompleted  += (c) => Debug.WriteLine($"Completed: {new string(c.PhonemesSpoken)}");
+        tts.OnSpeechCanceled   += (c) => Debug.WriteLine($"Canceled:  {new string(c.PhonemesSpoken_BestGuess)}");
 
         while (true) {
             Console.Write("Type text to speak: ");

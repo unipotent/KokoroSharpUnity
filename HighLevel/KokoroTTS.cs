@@ -91,66 +91,80 @@ public sealed class KokoroTTS : KokoroEngine {
     /// <remarks> It in turn relays those samples to the <see cref="KokoroPlayback"/> instance, and sets up follow-up callbacks regarding playback progress. </remarks>
     void EnqueueWithCallbacks(float[] samples, string text, KokoroJob.KokoroJobStep step, KokoroJob job, SynthesisHandle handle, List<char> phonemesCache = null) {
         phonemesCache ??= [];
+        var phonemesToSpeak = job.Steps.SelectMany(x => x.Tokens ?? []).Select(x => Tokenizer.TokenToChar[x]).ToArray();
+        var playbackHandle = activePlayback.Enqueue(samples, OnStartedCallback, OnCompleteCallback, OnCanceledCallback);
+        handle.ReadyPlaybackHandles.Add(playbackHandle); // Marks the inference as "completed" and registers the playback handle as "ready".
 
-        activePlayback.Enqueue(
-            samples: samples,
-            OnStarted: () => {
-                // We need to add the SpeechStarted callback, but only to the very first segment.
-                if ((OnSpeechStarted == null && handle.OnSpeechStarted == null) && step != job.Steps[0]) { return; }
-                var phonemesToSpeak = job.Steps.SelectMany(x => x.Tokens ?? []).Select(x => Tokenizer.TokenToChar[x]).ToArray();
-                var startPacket = new SpeechStartPacket() {
-                    RelatedJob = job,
-                    TextToSpeak = text,
-                    PhonemesToSpeak = phonemesToSpeak,
-                };
-                OnSpeechStarted?.Invoke(startPacket);
-                handle.OnSpeechStarted?.Invoke(startPacket);
-            },
-            OnSpoken: () => {
-                var phonemes = step.Tokens.Select(x => Tokenizer.TokenToChar[x]);
-                phonemesCache.AddRange(phonemes);
 
-                // After each segment is complete, invoke the SpeechProgressed callback.
-                if (OnSpeechProgressed != null || handle.OnSpeechProgressed != null) {
-                    var progressPacket = new SpeechProgressPacket() {
-                        RelatedJob = job,
-                        RelatedStep = step,
-                        SpokenText_BestGuess = "Not implemented",
-                        PhonemesSpoken = phonemes.ToArray(),
-                    };
-                    OnSpeechProgressed?.Invoke(progressPacket);
-                    handle.OnSpeechProgressed?.Invoke(progressPacket);
-                }
+        // Callbacks
+        void OnStartedCallback() { // We need to add the SpeechStarted callback, but only to the very first segment.
+            if ((OnSpeechStarted == null && handle.OnSpeechStarted == null) && step != job.Steps[0]) { return; }
+            var startPacket = new SpeechStartPacket() {
+                RelatedJob = job,
+                TextToSpeak = text,
+                PhonemesToSpeak = phonemesToSpeak,
+            };
+            OnSpeechStarted?.Invoke(startPacket);
+            handle.OnSpeechStarted?.Invoke(startPacket);
+        }
+        void OnCompleteCallback() {
+            if (OnSpeechProgressed == null && handle.OnSpeechProgressed == null && OnSpeechCompleted == null && handle.OnSpeechCompleted == null) { return; }
 
-                // We also need to add the SpeechCompletion callback, but only to the very last segment.
-                if ((OnSpeechCompleted != null || handle.OnSpeechCompleted != null) && step == job.Steps[^1]) {
-                    var completionPacket = new SpeechCompletionPacket() {
-                        RelatedJob = job,
-                        RelatedStep = step,
-                        PhonemesSpoken = [.. phonemesCache],
-                        SpokenText = text,
-                    };
-                    OnSpeechCompleted?.Invoke(completionPacket);
-                    handle.OnSpeechCompleted?.Invoke(completionPacket);
-                }
-            },
-            OnCanceled: (t) => {
-                if (OnSpeechCanceled == null && handle.OnSpeechCanceled == null) { return; }
+            var phonemes = step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray();
+            phonemesCache.AddRange(phonemes);
 
-                // Let's assume the amount of spoken phonemes linearly matches the percentage.
-                var T = (int) Math.Round(step.Tokens.Length * t.percentage); // L * t
-                var phonemesSpokenGuess = step.Tokens.Take(T).Select(x => Tokenizer.TokenToChar[x]);
-                var cancelationPacket = new SpeechCancelationPacket() {
+            // After each segment is complete, invoke the SpeechProgressed callback.
+            if (OnSpeechProgressed != null || handle.OnSpeechProgressed != null) {
+                var progressPacket = new SpeechProgressPacket() {
                     RelatedJob = job,
                     RelatedStep = step,
-                    SpokenText_BestGuess = "Not implemented",
-                    PhonemesSpoken_BestGuess = [.. phonemesCache, .. phonemesSpokenGuess],
-                    PhonemesSpoken_PrevSegments_Certain = [.. phonemesCache],
-                    PhonemesSpoken_LastSegment_BestGuess = [.. phonemesSpokenGuess]
+                    SpokenText_BestGuess = step == job.Steps[^1] ? text : MakeBestGuess(1, phonemes),
+                    PhonemesSpoken = phonemes,
                 };
-                OnSpeechCanceled?.Invoke(cancelationPacket);
-                handle.OnSpeechCanceled?.Invoke(cancelationPacket);
+                OnSpeechProgressed?.Invoke(progressPacket);
+                handle.OnSpeechProgressed?.Invoke(progressPacket);
             }
-        );
+
+            // We also need to add the SpeechCompletion callback, but only to the very last segment.
+            if ((OnSpeechCompleted != null || handle.OnSpeechCompleted != null) && step == job.Steps[^1]) {
+                var completionPacket = new SpeechCompletionPacket() {
+                    RelatedJob = job,
+                    RelatedStep = step,
+                    PhonemesSpoken = [.. phonemesCache],
+                    SpokenText = text,
+                };
+                OnSpeechCompleted?.Invoke(completionPacket);
+                handle.OnSpeechCompleted?.Invoke(completionPacket);
+            }
+        }
+        void OnCanceledCallback((float time, float percentage) t) {
+            if (OnSpeechCanceled == null && handle.OnSpeechCanceled == null) { return; }
+
+            // Let's assume the amount of spoken phonemes linearly matches the percentage.
+            var T = (int) Math.Round(step.Tokens.Length * t.percentage); // L * t
+            var phonemesSpokenGuess = step.Tokens.Take(T).Select(x => Tokenizer.TokenToChar[x]);
+            var cancelationPacket = new SpeechCancelationPacket() {
+                RelatedJob = job,
+                RelatedStep = step,
+                SpokenText_BestGuess = MakeBestGuess(t.percentage, step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray()),
+                PhonemesSpoken_BestGuess = [.. phonemesCache, .. phonemesSpokenGuess],
+                PhonemesSpoken_PrevSegments_Certain = [.. phonemesCache],
+                PhonemesSpoken_LastSegment_BestGuess = [.. phonemesSpokenGuess]
+            };
+            OnSpeechCanceled?.Invoke(cancelationPacket);
+            handle.OnSpeechCanceled?.Invoke(cancelationPacket);
+            phonemesCache.AddRange(phonemesSpokenGuess);
+        }
+
+        string MakeBestGuess(float percentage, char[] segmentPhonemes) {
+            var packet = new GuessPacket() {
+                OriginalText = text,
+                AllPhonemes = phonemesToSpeak,
+                PreSpokenPhonemes = [.. phonemesCache],
+                SegmentPhonemes = segmentPhonemes,
+                SegmentT = percentage
+            };
+            return SpeechGuesser.GuessSpeech_LowEffort(packet);
+        }
     }
 }

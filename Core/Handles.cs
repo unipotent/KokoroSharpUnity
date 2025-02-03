@@ -6,12 +6,13 @@ using System;
 
 /// <summary> Contains audio samples and callbacks for playback management. </summary>
 /// <remarks> Used by <see cref="KokoroPlayback"/> to queue and manage audio samples with completion/cancellation tracking. </remarks>
-internal class PlaybackHandle {
+public class PlaybackHandle {
     public float[] Samples;
     public Action OnStarted;
     public Action OnSpoken;
     public Action<(float time, float percentage)> OnCanceled;
 
+    public KokoroPlayback Owner { get; init; }
     public bool Aborted { get; private set; }
     public void Abort(bool raiseCancelCallback = true) {
         Aborted = true;
@@ -43,11 +44,15 @@ public class SynthesisHandle {
     /// <summary> The inference job this handle is connected to. </summary>
     public KokoroJob Job { get; init; }
 
+    /// <summary> Contains the handles of the audio playback instances that are ready to be played. </summary>
+    public List<PlaybackHandle> ReadyPlaybackHandles { get; } = [];
+
+
+
     //public Action OnSynthesisStarted;
     //public Action OnSynthesisProgressed;
     //public Action OnSynthesisCompleted;
 
     //public int CurrentStep { get; set; }
-    //public List<PlaybackHandle> RegisteredPlaybackHandles { get; set; }
-    //public PlaybackHandle CurrentPlaybackHandle => RegisteredPlaybackHandles[CurrentStep];
+    //public PlaybackHandle CurrentPlaybackHandle => ReadyPlaybackHandles[CurrentStep];
 }

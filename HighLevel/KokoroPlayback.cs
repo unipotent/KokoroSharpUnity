@@ -42,6 +42,7 @@ public sealed class KokoroPlayback : IDisposable {
                     // Once playback finished, invoke the correct callback.
                     if (stream.Position == stream.Length) { packet.OnSpoken?.Invoke(); }
                     else { packet.OnCanceled?.Invoke(((float) (DateTime.Now - startTime).TotalSeconds, (float) (stream.Position / (float) stream.Length))); }
+                    stream.Dispose();
                 }
                 if (queuedPackets.IsEmpty && AssignedJob?.isDone == true) { Dispose(); }
             }

@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 /// <para> Phonemization happens via the espeak-ng library: <b>https://github.com/espeak-ng/espeak-ng/blob/master/docs/guide.md</b> </para>
 /// </remarks>
 public static class Tokenizer {
-    static HashSet<char> punctuation = [.. ":,.!?"]; // Lines split on any of these occurences, by design via espeak-ng.
+    internal static HashSet<char> punctuation = [.. ":,.!?"]; // Lines split on any of these occurences, by design via espeak-ng.
     static Dictionary<char, string> currencies = new() { { '$', "dollar" }, { '€', "euro" }, { '£', "pound" }, { '¥', "yen" }, { '₹', "rupee" }, { '₽', "ruble" }, { '₩', "won" }, { '₺', "lira" }, { '₫', "dong" } };
 
     public static IReadOnlyDictionary<char, int> Vocab { get; }
@@ -77,7 +77,7 @@ public static class Tokenizer {
     }
 
     /// <summary> Normalizes the input text to what the Kokoro model would expect to see, preparing it for phonemization. </summary>
-    static string PreprocessText(string text) {
+    internal static string PreprocessText(string text) {
         text = text.Normalize().Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
         foreach (var punc in punctuation) { text = text.Replace(punc.ToString(), $"{punc} "); }
 
