@@ -29,7 +29,6 @@ With a custom phonemization solution, these additional languages are also suppor
 
 ## Getting started
 ```csharp
-KokoroVoiceManager.LoadVoicesFromPath(); // Load voices. They're already there.
 KokoroTTS tts = new(@"path\to\your\kokoro_model.onnx"); // Initialize the model
 KokoroVoice heartVoice = KokoroVoiceManager.GetVoice("af_heart"); // Grab a voice of your liking,
 while (true) { tts.SpeakFast(Console.ReadLine(), heartVoice); } // .. and have it speak your text!
@@ -46,7 +45,7 @@ Above is a simple way to get started on the highest level. For more control, che
 
 - The `voices` folder are automatically copied to your build path when you build and are ready to be accessed. Same with the `espeak` backend for Windows. Developers may opt to remove them when shipping their apps.
 
-- Mind that `LoadVoicesFromPath` is not automated because developers may want to implement their custom voice-loading logic when shipping a project that utilizes KokoroSharp for text-to-speech synthesis.
+- Mind that `LoadVoicesFromPath` exists as an option, in case developers want to implement their custom voice-loading logic when shipping a project that utilizes KokoroSharp for text-to-speech synthesis.
 
 - In addition, the built-in tokenization (`text -> tokens`) is NOT mandatory, and can be bypassed for platforms like `Android/iOS`, given developers provide pre-phonemized input with their phonemization solution of choice.
 

@@ -49,7 +49,7 @@ public sealed class KokoroPlayback : IDisposable {
     public void Enqueue(float[] samples) => Enqueue(samples, null, null);
 
     /// <summary> Enqueues specified audio samples for playback. They will be played once all previously queued samples have been played. </summary>
-    /// <remarks> The callbacks will be raised appropriately during playback. Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
+    /// <remarks> The callbacks will be raised appropriately during playback. Note that "Cancel" will NOT BE CALLED for playbacks that never started. </remarks>
     internal PlaybackHandle Enqueue(float[] samples, Action OnStarted = null, Action OnSpoken = null, Action<(float time, float percentage)> OnCanceled = null) {
         ObjectDisposedException.ThrowIf(hasExited, this);
 

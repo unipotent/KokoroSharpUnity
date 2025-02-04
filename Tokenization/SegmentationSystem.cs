@@ -7,7 +7,7 @@ using static Tokenizer;
 public static class SegmentationSystem {
     /// <summary> Turns the input tokens into multiple segments, aggressively optimized for streaming. Then returns the segments in a list. </summary>
     /// <remarks> This is just so the audio can be played back with the first part, while the model is still processing the rest of the sequence. </remarks>
-    public static List<int[]> SplitToSegments(int[] tokens, int minFirstSegmentLength = 1, int maxFirstSegmentLength = 60, int maxSecondSegmentLength = 100, int minFollowupSegmentsLength = 150) {
+    public static List<int[]> SplitToSegments(int[] tokens, int minFirstSegmentLength = 1, int maxFirstSegmentLength = 40, int maxSecondSegmentLength = 100, int minFollowupSegmentsLength = 150) {
         if (tokens.Length <= maxFirstSegmentLength) { return [tokens]; }
 
         List<(int start, int end)> potentialSegments = [];

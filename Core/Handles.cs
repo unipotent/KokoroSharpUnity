@@ -1,8 +1,4 @@
-﻿namespace KokoroSharp;
-
-using KokoroSharp.Core;
-
-using System;
+﻿namespace KokoroSharp.Core;
 
 public enum KokoroPlaybackHandleState { Queued, InProgress, Completed, Aborted }
 
@@ -38,7 +34,7 @@ public class SynthesisHandle {
     /// <remarks> Can be used to retrieve info about the original task, including spoken text, and phonemes. </remarks>
     public Action<SpeechStartPacket> OnSpeechStarted;
 
-    /// <summary> Callback raised when a given text segment was spoken successfully. This includes the last segment. </summary>
+    /// <summary> Callback raised when a text segment was spoken successfully, progressing the speech to the next segment. </summary>
     /// <remarks> Note that some contents of this packet are GUESSED, which means they might not be accurate. </remarks>
     public Action<SpeechProgressPacket> OnSpeechProgressed;
 
@@ -46,8 +42,8 @@ public class SynthesisHandle {
     /// <remarks> Can be used to retrieve info about the original task, including spoken text, and phonemes. </remarks>
     public Action<SpeechCompletionPacket> OnSpeechCompleted;
 
-    /// <summary> Callback raised when a segment was aborted, during speech, or before it even started. Can retrieve which parts were spoken, in part or in full. </summary>
-    /// <remarks> Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
+    /// <summary> Callback raised when the playback was stopped amidst speech. Can retrieve which parts were spoken, in part or in full. </summary>
+    /// <remarks> Note that "Cancel" will NOT BE CALLED for speeches whose playback never ever started. </remarks>
     public Action<SpeechCancelationPacket> OnSpeechCanceled;
 
     /// <summary> The inference job this handle is connected to. </summary>

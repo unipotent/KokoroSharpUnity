@@ -1,7 +1,4 @@
-﻿namespace KokoroSharp;
-
-using KokoroSharp.Core;
-
+﻿namespace KokoroSharp.Core;
 
 /// <summary> Callback packet that gets sent when part of the speech playback was completed. </summary>
 /// <remarks> Contains info about the part that was spoken since the previous packet was sent. </remarks>

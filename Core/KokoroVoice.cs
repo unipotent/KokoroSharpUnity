@@ -16,6 +16,14 @@ public class KokoroVoice {
     /// <remarks> Can initialize this via <see cref="FromPath(string)"/>. See the documentation for more information on how to prepare `.pt` voices for use in KokoroSharp. </remarks>
     public float[,,] Features { get; init; }
 
+    /// <summary> The language this voice's speaker is intended to be speaking. </summary>
+    /// <remarks> It is based on the first character of <see cref="Name"/>. </remarks>
+    public KokoroLanguage Language => this.GetLanguage();
+
+    /// <summary> The gender of this voice's speaker. </summary>
+    /// <remarks> It is based on the second character of <see cref="Name"/>. </remarks>
+    public KokoroGender Gender => (KokoroGender) name[1];
+
     /// <summary> Exports the voice on specified path. The voice can later be retrieved again with <see cref="FromPath(string)"/>. </summary>
     public void Export(string filePath) => NumSharp.np.Save(Features, filePath);
 

@@ -1,35 +1,43 @@
-﻿namespace KokoroSharp.Core;
+﻿namespace KokoroSharp;
 
 using NumSharp;
+using KokoroSharp.Core;
 
 /// <summary> Helper module responsible for holding Kokoro Voices and making them accessible for retrieval by name. </summary>
 /// <remarks> Also contains methods that allows mixing voices with each other to create new voices with shared characteristics. </remarks>
 public static class KokoroVoiceManager {
     public static List<KokoroVoice> Voices { get; } = [];
+    static HashSet<string> loadedFilePaths = [];
 
-    /// <summary> Gathers and loads all voices on the specified path. Loaded voices can be accessed via <see cref="GetVoice(string)"/>. </summary>
-    /// <remarks> This part is not automated in case developers want to ship their project with custom paths or voice loading logic. </remarks>
+    /// <summary> Gathers and loads all voices on the specified path. ("voices" is the default path the Nuget Package bundles the voices at). </summary>
+    /// <remarks> This exists in case developers want to ship their project with custom paths or voice loading logic. </remarks>
     public static void LoadVoicesFromPath(string voicesPath = "voices") {
-        IEnumerable<string> files = Directory.GetFiles(voicesPath);
+        if (!Directory.Exists(voicesPath)) { throw new DirectoryNotFoundException(); }
+        var voiceFilePaths = Directory.GetFiles(voicesPath);
 
-        foreach (var filePath in files) {
+        foreach (var filePath in voiceFilePaths) {
+            if (!loadedFilePaths.Add(filePath)) { continue; }
             var voiceName = Path.GetFileNameWithoutExtension(filePath);
             var voiceFeatures = np.Load<float[,,]>(filePath);
             Voices.Add(new() { Name = voiceName, Features = voiceFeatures });
         }
     }
 
-    /// <summary> Retrieves a registered voice by name, including the language and gender prefix. </summary>
+    /// <summary> Retrieves a loaded voice by name, including the language and gender prefix. </summary>
     /// <remarks> Customly mixed voices will not be considered unless named and added to <see cref="Voices"/>. </remarks>
-    public static KokoroVoice GetVoice(string name) => Voices.FirstOrDefault(x => x.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+    public static KokoroVoice GetVoice(string name) {
+        if (Voices.Count == 0) { LoadVoicesFromPath(); }
+        return Voices.First(x => x.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+    }
 
     /// <summary> Allows retrieving voices that can speak fluently in the specified language. </summary>
-    /// /// <remarks> If 'gender' is specified, voices of different genders than the one specified will be ignored. </remarks>
+    /// <remarks> If 'gender' is specified, voices of different genders than the one specified will be ignored. </remarks>
     public static List<KokoroVoice> GetVoices(KokoroLanguage language, KokoroGender gender = KokoroGender.Both) => GetVoices([language], gender);
 
     /// <summary> Allows retrieving voices that can speak fluently in the specified languages. </summary>
     /// <remarks> If 'gender' is specified, voices of different genders than the one specified will be ignored. </remarks>
     public static List<KokoroVoice> GetVoices(IEnumerable<KokoroLanguage> languages, KokoroGender gender = KokoroGender.Both) {
+        if (Voices.Count == 0) { LoadVoicesFromPath(); }
         var selectedVoices = Voices.FindAll(x => languages.Contains(x.GetLanguage()));
         if (gender != KokoroGender.Both) { selectedVoices.RemoveAll(x => x.Name[1] != (char) gender); }
         return selectedVoices;

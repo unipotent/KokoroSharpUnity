@@ -1,5 +1,8 @@
 ﻿namespace KokoroSharp.Tokenization;
 
+using KokoroSharp.Core;
+
+
 /// <summary>
 /// <para> System dedicated to <b>*guessing*</b> the text that has been spoken, given the phonemes that have been spoken, and additional info about the progress of the speech so far. </para>
 /// <para> This is particularly useful when needing to synchronize a UI with the ongoing speech (e.g. when canceling or reading along). </para>
