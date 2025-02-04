@@ -4,10 +4,10 @@ using KokoroSharp.Core;
 
 using System;
 
-//public enum KokoroPlaybackHandleState { Queued, InProgress, Completed, Aborted }
+public enum KokoroPlaybackHandleState { Queued, InProgress, Completed, Aborted }
 
 /// <summary> Handle for audio samples that are queued to be spoken, and progress callbacks regarding their playback. </summary>
-/// <remarks> Playback of unspoken-yet samples can be aborted, and </remarks>
+/// <remarks> Playback of unspoken-yet samples can be aborted using this handle. </remarks>
 public class PlaybackHandle {
     public float[] Samples;
     public Action OnStarted;
@@ -16,14 +16,14 @@ public class PlaybackHandle {
 
     public KokoroPlayback Owner { get; init; }
 
-    // TODO: Replace with enum.
-    public bool Aborted { get; private set; }
-    public bool Completed { get; set; }
+    public KokoroPlaybackHandleState State { get; set; } = KokoroPlaybackHandleState.Queued;
+    public bool Aborted => State == KokoroPlaybackHandleState.Aborted;
 
     /// <summary> Abort playback of these samples, marking them as something to never be spoken of. </summary>
     /// <remarks> Optionally, the `OnCanceled` event can be raised on demand. </remarks>
     public void Abort(bool raiseCancelCallback = false) {
-        Aborted = true;
+        if (this.State == KokoroPlaybackHandleState.Completed) { return; }
+        State = KokoroPlaybackHandleState.Aborted;
         if (raiseCancelCallback) { OnCanceled?.Invoke((0f, 0f)); }
     }
 
@@ -54,7 +54,6 @@ public class SynthesisHandle {
 
     /// <summary> Contains the handles of the audio playback instances that are ready to be played. </summary>
     public List<PlaybackHandle> ReadyPlaybackHandles { get; } = [];
-
 
 
     //public Action OnSynthesisStarted;

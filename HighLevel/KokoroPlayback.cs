@@ -38,10 +38,10 @@ public sealed class KokoroPlayback : IDisposable {
                     var stream = new RawSourceWaveStream(GetBytes(samples), 0, samples.Length * 2, waveFormat);
                     waveOut.Init(stream); waveOut.Play(); // Initialize and play the audio stream, then wait until it's done.
                     while (!hasExited && !packet.Aborted && waveOut.PlaybackState == PlaybackState.Playing) { await Task.Delay(10); }
-                    if (packet.Aborted) { waveOut.Stop(); }
+                    if (!hasExited && packet.Aborted) { waveOut.Stop(); }
 
                     // Once playback finished, invoke the correct callback.
-                    if (stream.Position == stream.Length) { packet.OnSpoken?.Invoke(); packet.Completed = true; }
+                    if (stream.Position == stream.Length) { packet.OnSpoken?.Invoke(); packet.State = KokoroPlaybackHandleState.Completed; }
                     else { packet.OnCanceled?.Invoke(((float) (DateTime.Now - startTime).TotalSeconds, (float) (stream.Position / (float) stream.Length))); }
                     stream.Dispose();
                 }
