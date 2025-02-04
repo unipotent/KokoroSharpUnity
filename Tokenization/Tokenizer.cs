@@ -138,7 +138,7 @@ public static class Tokenizer {
         for (int i = 0; i < 5; i++) { phonemes = phonemes.Replace("  ", " "); }
         foreach (var f in punctuation) { phonemes = phonemes.Replace($" {f}", f.ToString()); }
         for (int i = 0; i < 5; i++) { phonemes = phonemes.Replace("!!", "!").Replace("!?!", "!?"); }
-        //phonemes = phonemes.Replace("kˈoʊlən")
+        phonemes = phonemes.Replace("ˈɛ", "ˌɛ");
 
         return new string(phonemes.Where(Vocab.ContainsKey).ToArray());
     }
