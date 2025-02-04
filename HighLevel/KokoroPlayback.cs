@@ -51,13 +51,15 @@ public sealed class KokoroPlayback : IDisposable {
     /// <summary> Enqueues specified audio samples for playback. They will be played once all previously queued samples have been played. </summary>
     /// <remarks> The callbacks will be raised appropriately during playback. Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
     internal PlaybackHandle Enqueue(float[] samples, Action OnStarted = null, Action OnSpoken = null, Action<(float time, float percentage)> OnCanceled = null) {
+        ObjectDisposedException.ThrowIf(hasExited, this);
+
         var packet = new PlaybackHandle(samples, OnStarted, OnSpoken, OnCanceled) { Owner = this };
         queuedPackets.Enqueue(packet);
         return packet;
     }
 
     /// <summary> Stops the playback of the currently playing samples. The next samples that are queued (if any) will begin playing immediately. </summary>
-    /// <remarks> Note that this will NOT completely stop this instance from playing audio. To completely stop this, call the `Dispose()` method. </remarks>
+    /// <remarks> Note that this will NOT completely stop this instance from playing audio. To completely dispose this, call the `Dispose()` method. </remarks>
     public void StopPlayback() => waveOut.Stop();
 
     /// <summary> Adjust the volume of the playback. [0.0, to 1.0] </summary>

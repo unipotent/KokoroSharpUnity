@@ -23,7 +23,7 @@ public class PlaybackHandle {
     /// <summary> Abort playback of these samples, marking them as something to never be spoken of. </summary>
     /// <remarks> Optionally, the `OnCanceled` event can be raised on demand. </remarks>
     public void Abort(bool raiseCancelCallback = false) {
-        if (this.State == KokoroPlaybackHandleState.Completed) { return; }
+        if (State == KokoroPlaybackHandleState.Completed) { return; }
         State = KokoroPlaybackHandleState.Aborted;
         if (raiseCancelCallback) { OnCanceled?.Invoke((0f, 0f)); }
     }

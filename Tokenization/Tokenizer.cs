@@ -79,32 +79,27 @@ public static class Tokenizer {
     /// <summary> Normalizes the input text to what the Kokoro model would expect to see, preparing it for phonemization. </summary>
     internal static string PreprocessText(string text) {
         text = text.Normalize().Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
-        foreach (var punc in punctuation) { text = text.Replace(punc.ToString(), $"{punc} "); }
-
+        text = Regex.Replace(text, @"[$€£¥₹₽₩₺₫]\d+(?:\.\d+)?", FlipMoneyMatch);
+        for (int i = 0; i < 5; i++) {
+            text = Regex.Replace(text, @"(\d)\.(\d)", m => m.Value.Replace(".", " point "));
+            text = Regex.Replace(text, @"\bwww\.[a-zA-Z0-9]+\b|\b[a-zA-Z0-9]+\.(com|net|org|io|edu|gov|mil|info|biz|co|us|uk|ca|de|fr|jp|au|cn|ru|gr)\b", m => m.Value.Replace(".", " dot "));
+        }
         text = Regex.Replace(text, @"\bD[Rr]\.(?= [A-Z])", "Doctor");
         text = Regex.Replace(text, @"\b(Mr|MR)\.(?= [A-Z])", "Mister");
         text = Regex.Replace(text, @"\b(Ms|MS)\.(?= [A-Z])", "Miss");
         text = Regex.Replace(text, @"\x20{2,}", " ");
 
         text = Regex.Replace(text, @"(?<!\:)\b([1-9]|1[0-2]):([0-5]\d)\b(?!\:)", m => $"{m.Groups[1].Value} {m.Groups[2].Value}");
-        text = Regex.Replace(text, @"[$€£¥₹₽₩₺₫]\d+(?:\.\d+)?", FlipMoneyMatch);
-        text = Regex.Replace(text, @"\d+\.\d+", PointNumMatch);
-        
-        while (punctuation.Contains(text[0])) { text = text[1..]; }
+        foreach (var punc in punctuation) { text = text.Replace(punc.ToString(), $"{punc} "); }
+
+        while (text.Length > 0 && punctuation.Contains(text[0])) { text = text[1..]; }
         return text.Trim();
 
 
         // Helper methods
         static string FlipMoneyMatch(Match m) {
             var value = m.Value[1..].Replace(",", ".");
-            var currency = currencies[m.Value[0]];
-            return value.Contains('.') ? $"{value.Replace(".", " ")} {currency}s"
-                 : value.EndsWith('1') ? $"{value} {currency}" : $"{value} {currency}s";
-        }
-
-        static string PointNumMatch(Match m) {
-            var parts = m.Value.Split('.');
-            return $"{parts[0]} point {string.Join(" ", parts[1].ToCharArray())}";
+            return $"{value} {currencies[m.Value[0]]}{(value == "1" ? "" : "s")}";
         }
     }
 

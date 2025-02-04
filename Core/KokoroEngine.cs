@@ -33,6 +33,7 @@ public class KokoroEngine : IDisposable {
     /// <summary> Enqueues a job for the Kokoro TTS engine, scheduling it to be processed when the engine is free. </summary>
     /// <remarks> The job will be automatically dispatched when all prior jobs have been completed or canceled. Canceled jobs resolve and get skipped when their order arrives. </remarks>
     public KokoroJob EnqueueJob(KokoroJob job) {
+        ObjectDisposedException.ThrowIf(hasExited, this);
         queuedJobs.Enqueue(job);
         return job;
     }
