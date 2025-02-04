@@ -7,13 +7,14 @@ using System;
 public enum KokoroPlaybackHandleState { Queued, InProgress, Completed, Aborted }
 
 /// <summary> Handle for audio samples that are queued to be spoken, and progress callbacks regarding their playback. </summary>
-/// <remarks> Playback of unspoken-yet samples can be aborted using this handle. </remarks>
+/// <remarks> The included delegates can be subscribed to, and/or playback can be aborted using this handle, if needed. </remarks>
 public class PlaybackHandle {
     public float[] Samples;
     public Action OnStarted;
     public Action OnSpoken;
     public Action<(float time, float percentage)> OnCanceled;
 
+    /// <summary> The playback instance that owns this handle. </summary>
     public KokoroPlayback Owner { get; init; }
 
     public KokoroPlaybackHandleState State { get; set; } = KokoroPlaybackHandleState.Queued;
@@ -51,6 +52,9 @@ public class SynthesisHandle {
 
     /// <summary> The inference job this handle is connected to. </summary>
     public KokoroJob Job { get; init; }
+
+    /// <summary> The text this handle's job is responsible of speaking. </summary>
+    public string TextToSpeak { get; init; }
 
     /// <summary> Contains the handles of the audio playback instances that are ready to be played. </summary>
     public List<PlaybackHandle> ReadyPlaybackHandles { get; } = [];

@@ -14,13 +14,9 @@ public sealed class KokoroPlayback : IDisposable {
 
     volatile bool hasExited;
 
-    /// <summary> The job (if any) whose lifetime this KokoroPlayback instance lives with. Can be null for long-term instances. </summary>
-    /// <remarks> Once that job is done and the playback completes, the KokoroPlayback instance will be automatically disposed. </remarks>
-    public KokoroJob AssignedJob { get; init; }
-
     /// <summary> If true, the output audio of the model will be *nicified* before being played back. </summary>
     /// <remarks> Nicification includes trimming silent start and finish, and attempting to reduce noise. </remarks>
-    public bool NicifySamples { get; set; }
+    public bool NicifySamples { get; set; } = true;
 
     /// <summary> Creates a background audio playback instance, and causes it to automatically play back all samples added via <see cref="Enqueue(float[])"/>. </summary>
     /// <remarks> If 'job' is specified, the instance will automatically cease when the job is completed or canceled. </remarks>
@@ -45,7 +41,6 @@ public sealed class KokoroPlayback : IDisposable {
                     else { packet.OnCanceled?.Invoke(((float) (DateTime.Now - startTime).TotalSeconds, (float) (stream.Position / (float) stream.Length))); }
                     stream.Dispose();
                 }
-                if (queuedPackets.IsEmpty && AssignedJob?.isDone == true) { Dispose(); }
             }
         }).Start();
     }
@@ -56,7 +51,7 @@ public sealed class KokoroPlayback : IDisposable {
     /// <summary> Enqueues specified audio samples for playback. They will be played once all previously queued samples have been played. </summary>
     /// <remarks> The callbacks will be raised appropriately during playback. Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
     internal PlaybackHandle Enqueue(float[] samples, Action OnStarted = null, Action OnSpoken = null, Action<(float time, float percentage)> OnCanceled = null) {
-        var packet = new PlaybackHandle(samples, OnStarted, OnSpoken, OnCanceled);
+        var packet = new PlaybackHandle(samples, OnStarted, OnSpoken, OnCanceled) { Owner = this };
         queuedPackets.Enqueue(packet);
         return packet;
     }

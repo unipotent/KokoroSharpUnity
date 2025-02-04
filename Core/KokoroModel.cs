@@ -23,6 +23,10 @@ public sealed class KokoroModel : IDisposable {
     /// <remarks> Synchronously waits for the output (audio samples), and returns them when ready. Best used in async context. </remarks>
     public float[] Infer(int[] tokens, float[,,] voiceStyle, float speed = 1) {
         var (B, T, C) = (1, tokens.Length, voiceStyle.GetLength(2));
+        if (tokens.Length == 0) {
+            Debug.WriteLine("Received empty input token array. Returning empty float array.");
+            return [];
+        }
         if (tokens.Length > maxTokens) {
             Debug.WriteLine($"Max token count the model supports is {maxTokens}, but got {tokens.Length}. Please segment your input when passing longer sequences. Trimming to {maxTokens}.");
             Array.Resize(ref tokens, T = maxTokens);
