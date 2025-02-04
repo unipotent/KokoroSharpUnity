@@ -10,7 +10,9 @@ using System.Text.RegularExpressions;
 /// <para> Phonemization happens via the espeak-ng library: <b>https://github.com/espeak-ng/espeak-ng/blob/master/docs/guide.md</b> </para>
 /// </remarks>
 public static class Tokenizer {
-    internal static HashSet<char> punctuation = [.. ":,.!?"]; // Lines split on any of these occurences, by design via espeak-ng.
+    static char[] charsToReplace = ['\n', '(', ')', '[', ']'];  // We replace these characters with the ':' token, so they'll be caught by espeak-ng.
+    internal static HashSet<char> superstopSymbols = [.. ":"];  // Perfect for segmentation.
+    internal static HashSet<char> punctuation = [.. ":,.!?"];   // Lines split on any of these occurences, by design via espeak-ng.
     static Dictionary<char, string> currencies = new() { { '$', "dollar" }, { '€', "euro" }, { '£', "pound" }, { '¥', "yen" }, { '₹', "rupee" }, { '₽', "ruble" }, { '₩', "won" }, { '₺', "lira" }, { '₫', "dong" } };
 
     public static IReadOnlyDictionary<char, int> Vocab { get; }
@@ -78,7 +80,8 @@ public static class Tokenizer {
 
     /// <summary> Normalizes the input text to what the Kokoro model would expect to see, preparing it for phonemization. </summary>
     internal static string PreprocessText(string text) {
-        text = text.Normalize().Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
+        text = text.Normalize().Replace("\r\n", "\n").Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
+        foreach (var c in charsToReplace) { text = text.Replace(c, ':'); } // Replace chars espeak-ng wouldn't catch with the ':' character.
         text = Regex.Replace(text, @"[$€£¥₹₽₩₺₫]\d+(?:\.\d+)?", FlipMoneyMatch);
         for (int i = 0; i < 5; i++) {
             text = Regex.Replace(text, @"(\d)\.(\d)", m => m.Value.Replace(".", " point "));

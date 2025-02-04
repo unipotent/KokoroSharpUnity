@@ -28,7 +28,7 @@ public class SegmentationStrategy {
 
     /// <summary> The minimum allowed length of follow-up segments. Any 100% valid punctuation found after THIS many tokens will mark a new segment. </summary>
     /// <remarks> These can be long since they'll be processed in the background while the audio is playing. </remarks>
-    public int MinFollowupSegmentsLength = 300;
+    public int MinFollowupSegmentsLength = 200;
 }
 
 /// <summary> Helper class that allows turning text tokens into segments, allowing us to get the first response of the model quicker. </summary>

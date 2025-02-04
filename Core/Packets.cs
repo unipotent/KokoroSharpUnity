@@ -20,9 +20,13 @@ public struct SpeechProgressPacket {
     /// <remarks> Note that unlike <b>SpokenText_BestGuess</b>, these will be 100% accurate. </remarks>
     public char[] PhonemesSpoken;
 
-    /// <summary> The text that was spoken since the previous "SpeechProgress" packet was sent... probably </summary>
+    /// <summary> The text that was spoken since the beginning of this speech/KokoroJob... <b>probably (!)</b> </summary>
     /// <remarks> <b>NOTE:</b> It might not be accurate because Kokoro doesn't provide per-spoken-phoneme info to ONNX, so we can only infer segments. </remarks>
     public string SpokenText_BestGuess;
+
+    /// <summary> The text that was spoken since the previous "SpeechProgress" packet was sent... <b>probably (!)</b> </summary>
+    /// <remarks> <b>NOTE:</b> It might not be accurate because Kokoro doesn't provide per-spoken-phoneme info to ONNX, so we can only infer segments. </remarks>
+    //public string NewlySpokenText_BestGuess;
 
     /// <summary> The Kokoro Job this speech packet is connected to. </summary>
     public KokoroJob RelatedJob;
@@ -39,15 +43,15 @@ public struct SpeechCancelationPacket {
     /// <remarks> Note that these have <b>INDEED</b> been spoken but they do NOT include the last segment's phonemes. </remarks>
     public char[] PhonemesSpoken_PrevSegments_Certain;
 
-    /// <summary> The phonemes that were spoken on the last segment before cancelation... probably. </summary>
+    /// <summary> The phonemes that were spoken on the last segment before cancelation... <b>probably (!)</b> </summary>
     /// <remarks> Note that these ONLY include the last segment's <b>best guess</b> of phonemes, based on the percentage spoken. </remarks>
     public char[] PhonemesSpoken_LastSegment_BestGuess;
 
-    /// <summary> The phonemes that were spoken since the beginning of this speech/KokoroJob.... probably. </summary>
+    /// <summary> The phonemes that were spoken since the beginning of this speech/KokoroJob... <b>probably (!)</b> </summary>
     /// <remarks> Note that ones on the last segment will likely NOT be accurate, as they're based on the percentage spoken. </remarks>
     public char[] PhonemesSpoken_BestGuess;
 
-    /// <summary> The text that was spoken since the beginning of this speech/KokoroJob... probably </summary>
+    /// <summary> The text that was spoken since the beginning of this speech/KokoroJob... <b>probably (!)</b> </summary>
     /// <remarks> <b>NOTE:</b> It might not be accurate because Kokoro doesn't provide per-spoken-phoneme info to ONNX, so we can only infer segments. </remarks>
     public string SpokenText_BestGuess;
 
