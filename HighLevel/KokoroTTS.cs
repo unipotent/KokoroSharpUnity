@@ -35,6 +35,7 @@ public sealed class KokoroTTS : KokoroEngine {
 
     KokoroPlayback playbackInstance = new();
     SynthesisHandle currentHandle = new();
+    SegmentationStrategy defaultSegmentationStrategy = new();
 
     /// <summary>
     /// Creates a new Kokoro TTS Engine instance, loading the model into memory and initializing a background worker thread to continuously scan for newly queued jobs, dispatching them in order, when it's free.
@@ -64,14 +65,15 @@ public sealed class KokoroTTS : KokoroEngine {
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
     public SynthesisHandle Speak_Phonemes(string text, int[] tokens, KokoroVoice voice, SegmentationStrategy segmentationStrategy = null, bool fast = true) {
         StopPlayback();
-        var ttokens = fast ? SegmentationSystem.SplitToSegments(tokens) : [tokens];
+        segmentationStrategy ??= defaultSegmentationStrategy;
+        var ttokens = fast ? SegmentationSystem.SplitToSegments(tokens, segmentationStrategy) : [tokens];
         var job = EnqueueJob(KokoroJob.Create(ttokens, voice, 1, null));
 
         var phonemesCache = ttokens.Count > 1 ? new List<char>() : null;
         currentHandle = new SynthesisHandle() { Job = job, TextToSpeak = text };
         foreach (var step in job.Steps) {
-            step.OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, ttokens, step, job, currentHandle, phonemesCache);
-            Debug.WriteLine($"[step {job.Steps.IndexOf(step)}: {new string(step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray())}");
+            step.OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, ttokens, step, job, currentHandle, segmentationStrategy, phonemesCache);
+            Debug.WriteLine($"[step {job.Steps.IndexOf(step)}: {new string(step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray())}]");
         }
         return currentHandle;
     }
@@ -92,11 +94,19 @@ public sealed class KokoroTTS : KokoroEngine {
 
     /// <summary> This is a callback that gets invoked with the model's outputs (/audio samples) as parameters, once an inference job is complete. </summary>
     /// <remarks> It in turn relays those samples to the <see cref="KokoroPlayback"/> instance, and sets up follow-up callbacks regarding playback progress. </remarks>
-    void EnqueueWithCallbacks(float[] samples, string text, List<int[]> allTokens, KokoroJob.KokoroJobStep step, KokoroJob job, SynthesisHandle handle, List<char> phonemesCache = null) {
+    void EnqueueWithCallbacks(float[] samples, string text, List<int[]> allTokens, KokoroJob.KokoroJobStep step, KokoroJob job, SynthesisHandle handle, SegmentationStrategy segmentationStrategy, List<char> phonemesCache = null) {
         phonemesCache ??= [];
-        var phonemesToSpeak = job.Steps.SelectMany(x => x.Tokens ?? []).Select(x => Tokenizer.TokenToChar[x]).ToArray();
+        var allPhonemesToSpeak = job.Steps.SelectMany(x => x.Tokens ?? []).Select(x => Tokenizer.TokenToChar[x]).ToArray();
         var playbackHandle = playbackInstance.Enqueue(samples, OnStartedCallback, OnCompleteCallback, OnCanceledCallback);
         handle.ReadyPlaybackHandles.Add(playbackHandle); // Marks the inference as "completed" and registers the playback handle as "ready".
+        // Finally, if the segment is gracefully ended with a punctuation token, add some pause to it, to emulate natural pause.
+        bool shouldAddPause = NicifyAudio && segmentationStrategy != null && Tokenizer.PunctuationTokens.Contains(step.Tokens[^1]);
+        if (shouldAddPause) {
+            var secondsToWait = segmentationStrategy.SecondsOfPauseBetweenProperSegments[Tokenizer.TokenToChar[step.Tokens[^1]]];
+            var pauseHandle = playbackInstance.Enqueue(new float[(int) (secondsToWait * KokoroPlayback.waveFormat.SampleRate)], null, null, null);
+            playbackHandle.OnCanceled += (_) => pauseHandle.Abort(); // Last but not least, register the cancel/abort callbacks for the pause, so the playback buffer won't bloat.
+            playbackHandle.OnAborted += () => pauseHandle.Abort();   // The users don't need to be bothered with having access to these, but it's important for us to handle them.
+        }
 
 
         // Callbacks
@@ -105,7 +115,7 @@ public sealed class KokoroTTS : KokoroEngine {
             var startPacket = new SpeechStartPacket() {
                 RelatedJob = job,
                 TextToSpeak = text,
-                PhonemesToSpeak = phonemesToSpeak,
+                PhonemesToSpeak = allPhonemesToSpeak,
             };
             OnSpeechStarted?.Invoke(startPacket);
             handle.OnSpeechStarted?.Invoke(startPacket);
@@ -162,7 +172,7 @@ public sealed class KokoroTTS : KokoroEngine {
             var packet = new SpeechInfoPacket() {
                 OriginalText = text,
                 AllTokens = allTokens,
-                AllPhonemes = phonemesToSpeak,
+                AllPhonemes = allPhonemesToSpeak,
                 PreSpokenPhonemes = [.. phonemesCache],
                 SegmentPhonemes = segmentPhonemes,
                 SegmentIndex = job.Steps.IndexOf(step),

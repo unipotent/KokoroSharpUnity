@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 /// <para> Phonemization happens via the espeak-ng library: <b>https://github.com/espeak-ng/espeak-ng/blob/master/docs/guide.md</b> </para>
 /// </remarks>
 public static class Tokenizer {
-    static char[] charsToReplace = ['\n', '(', ')', '[', ']'];  // We replace these characters with the ':' token, so they'll be caught by espeak-ng.
+    static string[] charsToReplace = ["\n", "(", ")", "[", "]"];  // We replace these characters with the ':' token, so they'll be caught by espeak-ng.
     internal static HashSet<char> superstopSymbols = [.. ":"];  // Perfect for segmentation.
     internal static HashSet<char> punctuation = [.. ":,.!?"];   // Lines split on any of these occurences, by design via espeak-ng.
     static Dictionary<char, string> currencies = new() { { '$', "dollar" }, { '€', "euro" }, { '£', "pound" }, { '¥', "yen" }, { '₹', "rupee" }, { '₽', "ruble" }, { '₩', "won" }, { '₺', "lira" }, { '₫', "dong" } };
@@ -81,7 +81,11 @@ public static class Tokenizer {
     /// <summary> Normalizes the input text to what the Kokoro model would expect to see, preparing it for phonemization. </summary>
     internal static string PreprocessText(string text) {
         text = text.Normalize().Replace("\r\n", "\n").Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
-        foreach (var c in charsToReplace) { text = text.Replace(c, ':'); } // Replace chars espeak-ng wouldn't catch with the ':' character.
+        const string t = "l®fÆ22";
+        foreach (var c in charsToReplace) { text = text.Replace(c, t); } // Replace chars espeak-ng wouldn't catch with the ':' character.
+        while (text.Contains(t + t)) { text = text.Replace(t + t, t); }  // Then, try to remove all duplicates. This'll be just the first pass.
+        text = text.Replace(t, ":"); // Now we have got rid of all the duplicate symbol punctuations, and we'll preserve them as ':' characters.
+
         text = Regex.Replace(text, @"[$€£¥₹₽₩₺₫]\d+(?:\.\d+)?", FlipMoneyMatch);
         for (int i = 0; i < 5; i++) {
             text = Regex.Replace(text, @"(\d)\.(\d)", m => m.Value.Replace(".", " point "));
@@ -123,6 +127,8 @@ public static class Tokenizer {
         // Restoration of punctuation and spacing.
         var sb = new StringBuilder();
         for (int i = 0; i < phonemesArray.Length; i++) {
+            // First, finalize the parenthesis retrieval hack -- remove any duplicate columns that may have sneaked in.
+            while (phonemesArray[i].StartsWith("kˈoʊlən ")) { phonemesArray[i] = phonemesArray[i]["kˈoʊlən ".Length..]; }
             sb.Append(phonemesArray[i]);
             if (puncs.Count > i) { sb.Append(puncs[i]); }
         }
@@ -132,6 +138,7 @@ public static class Tokenizer {
         for (int i = 0; i < 5; i++) { phonemes = phonemes.Replace("  ", " "); }
         foreach (var f in punctuation) { phonemes = phonemes.Replace($" {f}", f.ToString()); }
         for (int i = 0; i < 5; i++) { phonemes = phonemes.Replace("!!", "!").Replace("!?!", "!?"); }
+        //phonemes = phonemes.Replace("kˈoʊlən")
 
         return new string(phonemes.Where(Vocab.ContainsKey).ToArray());
     }

@@ -9,6 +9,7 @@ public class PlaybackHandle {
     public Action OnStarted;
     public Action OnSpoken;
     public Action<(float time, float percentage)> OnCanceled;
+    public Action OnAborted;
 
     /// <summary> The playback instance that owns this handle. </summary>
     public KokoroPlayback Owner { get; init; }
@@ -19,9 +20,10 @@ public class PlaybackHandle {
     /// <summary> Abort playback of these samples, marking them as something to never be spoken of. </summary>
     /// <remarks> Optionally, the `OnCanceled` event can be raised on demand. </remarks>
     public void Abort(bool raiseCancelCallback = false) {
-        if (State == KokoroPlaybackHandleState.Completed) { return; }
+        if (State == KokoroPlaybackHandleState.Completed || State == KokoroPlaybackHandleState.Aborted) { return; }
         State = KokoroPlaybackHandleState.Aborted;
         if (raiseCancelCallback) { OnCanceled?.Invoke((0f, 0f)); }
+        OnAborted?.Invoke();
     }
 
     public PlaybackHandle(float[] samples, Action OnStarted, Action OnSpoken, Action<(float time, float percentage)> OnCanceled) => (Samples, this.OnStarted, this.OnSpoken, this.OnCanceled) = (samples, OnStarted, OnSpoken, OnCanceled);
