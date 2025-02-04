@@ -43,26 +43,27 @@ public sealed class KokoroTTS : KokoroEngine {
     /// </summary>
     public KokoroTTS(string modelPath, SessionOptions options = null) : base(modelPath, options) { }
 
-    /// <summary> Speaks the text with the specified voice, without segmenting it, resulting in a slower, yet potentially higher quality response. </summary>
+    /// <summary> Speaks the text with the specified voice, without segmenting it (max 510 tokens), resulting in a slower, yet potentially higher quality response. </summary>
     /// <remarks> This is the simplest, highest-level interface of the library. For more fine-grained controls, see <see cref="KokoroEngine"/>.</remarks>
     /// <param name="text"> The text to speak. </param>
     /// <param name="voice"> The voice that will speak it. Can also be a <see cref="KokoroVoice"/>. </param>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
-    public SynthesisHandle Speak(string text, KokoroVoice voice) => Speak_Phonemes(text, Tokenizer.Tokenize(text, voice.GetLangCode()), voice, fast: false);
+    public SynthesisHandle Speak(string text, KokoroVoice voice, SegmentationStrategy segmentationStrategy = null)
+        => Speak_Phonemes(text, Tokenizer.Tokenize(text, voice.GetLangCode()), voice, segmentationStrategy, fast: false);
 
     /// <summary> Segments the text before speaking it with the specified voice, resulting in an almost immediate response for the first chunk, with a potential hit in quality. </summary>
     /// <remarks> This is the simplest, highest-level interface of the library. For more fine-grained controls, see <see cref="KokoroEngine"/>.</remarks>
     /// <param name="text"> The text to speak. </param>
     /// <param name="voice"> The voice that will speak it. Can be loaded via <see cref="KokoroVoiceManager.GetVoice(string)"/>. </param>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
-    public SynthesisHandle SpeakFast(string text, KokoroVoice voice) => Speak_Phonemes(text, Tokenizer.Tokenize(text, voice.GetLangCode()), voice, fast: true);
+    public SynthesisHandle SpeakFast(string text, KokoroVoice voice, SegmentationStrategy segmentationStrategy = null)
+        => Speak_Phonemes(text, Tokenizer.Tokenize(text, voice.GetLangCode()), voice, segmentationStrategy, fast: true);
 
     /// <summary> Optional way to speak a pre-phonemized input. For actual <b>"text"</b>-to-speech inference, use <b>Speak(..)</b> and <b>SpeakFast(..)</b>. </summary>
-    /// <remarks> Specifying 'fast = true' will segment the audio before speaking it. Token arrays of length longer than the model's max will be automatically segmented regardless. </remarks>
+    /// <remarks> Specifying 'fast = true' will segment the audio before speaking it. Token arrays of length longer than the model's max (510 tokens) will be trimmed otherwise. </remarks>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
-    public SynthesisHandle Speak_Phonemes(string text, int[] tokens, KokoroVoice voice, bool fast = true) {
+    public SynthesisHandle Speak_Phonemes(string text, int[] tokens, KokoroVoice voice, SegmentationStrategy segmentationStrategy = null, bool fast = true) {
         StopPlayback();
-        if (tokens.Length > KokoroModel.maxTokens) { fast = true; }
         var ttokens = fast ? SegmentationSystem.SplitToSegments(tokens) : [tokens];
         var job = EnqueueJob(KokoroJob.Create(ttokens, voice, 1, null));
 

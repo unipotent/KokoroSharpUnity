@@ -16,7 +16,7 @@ internal class Program {
     static void Main(string[] _) {
         // You'll need to download the model first. You can find it in https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0.
         using KokoroTTS tts = new(@"kokoro.onnx") { NicifyAudio = true }; // The high level inference engine provided by KokoroSharp. We instantiate once, cache it, and reuse it.
-        KokoroVoiceManager.LoadVoicesFromPath("voices"); // The models are pre-bundled with the package, but they still need to be loaded manually.
+        //KokoroVoiceManager.LoadVoicesFromPath("voices"); // The voices are pre-bundled with the package in "/voices", but can still be loaded manually from a different path if needed.
         KokoroVoice sarah = KokoroVoiceManager.GetVoice("af_sarah"); // Once the voices are loaded, they can be retrieved instantly from memory.
         KokoroVoice nicole = KokoroVoiceManager.GetVoice("af_nicole"); // Kokoro always needs a voice for inference.
 
@@ -57,7 +57,7 @@ internal class Program {
             // Also, the callbacks are built-in inside `KokoroTTS`, so if you want them, you'd have to create your own.
             // Feel free to check out how it's done there, use it as an example, and tweak it to your liking!
             int[] tokens = Tokenizer.Tokenize(txt); // (1D array)
-            List<int[]> ttokens = SegmentationSystem.SplitToSegments(tokens, minFollowupSegmentsLength: 300); // (2D array)
+            List<int[]> ttokens = SegmentationSystem.SplitToSegments(tokens); // (2D array)
 
 
             // Mixing voices is easy, and you can mix as many as you want together, even ones intended for different languages!
