@@ -129,6 +129,7 @@ public static class Tokenizer {
         for (int i = 0; i < phonemesArray.Length; i++) {
             // First, finalize the parenthesis retrieval hack -- remove any duplicate columns that may have sneaked in.
             while (phonemesArray[i].StartsWith("kˈoʊlən ")) { phonemesArray[i] = phonemesArray[i]["kˈoʊlən ".Length..]; }
+            while (phonemesArray[i].StartsWith(" kˈoʊlən")) { phonemesArray[i] = phonemesArray[i][" kˈoʊlən".Length..]; }
             sb.Append(phonemesArray[i]);
             if (puncs.Count > i) { sb.Append(puncs[i]); }
         }
