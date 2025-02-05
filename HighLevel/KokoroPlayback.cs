@@ -1,6 +1,7 @@
 ﻿namespace KokoroSharp;
 
 using KokoroSharp.Core;
+using KokoroSharp.Internal;
 
 using NAudio.Wave;
 using System.Collections.Concurrent;
@@ -9,7 +10,7 @@ using System.Collections.Concurrent;
 /// <remarks> Internally hosts a background worker thread that keeps checking for any queued samples, and plays them back if there's nothing else playing, in the same order they were queued. </remarks>
 public sealed class KokoroPlayback : IDisposable {
     public static readonly WaveFormat waveFormat = new(24000, 16, 1);
-    readonly WaveOutEvent waveOut = new();
+    readonly KokoroWaveOutEvent waveOut = CrossPlatformHelper.GetAudioPlayer();
     readonly ConcurrentQueue<PlaybackHandle> queuedPackets = [];
 
     volatile bool hasExited;
@@ -63,7 +64,7 @@ public sealed class KokoroPlayback : IDisposable {
     public void StopPlayback() => waveOut.Stop();
 
     /// <summary> Adjust the volume of the playback. [0.0, to 1.0] </summary>
-    public void SetVolume(float volume) => waveOut.Volume = Math.Clamp(volume, 0f, 1f);
+    public void SetVolume(float volume) => waveOut.SetVolume(Math.Clamp(volume, 0f, 1f));
 
     /// <summary> Immediately stops the playback and notifies the background worker thread to exit. </summary>
     /// <remarks> Note that this DOES NOT terminate any <see cref="KokoroJob"/>s related to this instance. </remarks>

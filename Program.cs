@@ -80,11 +80,11 @@ internal class Program {
             tts.EnqueueJob(new KokoroPauseJob() { PauseTime = 2f, OnComplete = playback.Enqueue });
 
             // And can also manually load the voice from the path you want, as a float array...
-            float[,,] michaelNPY = NumSharp.np.Load<float[,,]>(@"voices\am_michael.npy");
+            float[,,] michaelNPY = NumSharp.np.Load<float[,,]>(@"voices/am_michael.npy");
             tts.EnqueueJob(KokoroJob.Create(ttokens, michaelNPY, speed:0.8f, playback.Enqueue));
 
             // ...or as a KokoroVoice. Those types are fully interchangeable with each other.
-            KokoroVoice onyxVoice = KokoroVoice.FromPath(@"voices\am_onyx.npy");
+            KokoroVoice onyxVoice = KokoroVoice.FromPath(@"voices/am_onyx.npy");
             tts.EnqueueJob(KokoroJob.Create(ttokens, onyxVoice, speed:1.2f, playback.Enqueue));
         }
     }

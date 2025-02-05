@@ -1,6 +1,9 @@
 ﻿namespace KokoroSharp.Tokenization;
 
+using KokoroSharp.Internal;
+
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -57,10 +60,9 @@ public static class Tokenizer {
     /// <summary> Invokes the espeak-ng via command line, to convert given text into phonemes. </summary>
     /// <remarks> Espeak will return a line ending when it meets any of the <see cref="PunctuationTokens"/> and gets rid of any punctuation, so these will have to be converted back to a single-line, with the punctuation restored. </remarks>
     static string Phonemize_Internal(string text, out string originalSegments, string langCode = "en-us") {
-        var espeak_cli_path = OperatingSystem.IsWindows() ? @$"{Directory.GetCurrentDirectory()}\espeak\espeak-ng" : "espeak-ng";
         using var process = new Process() {
             StartInfo = new ProcessStartInfo() {
-                FileName = espeak_cli_path,
+                FileName = CrossPlatformHelper.GetEspeakBinariesPath(),
                 WorkingDirectory = null,
                 Arguments = $"--ipa=3 -q -v {langCode} \"{text}\"",
                 RedirectStandardInput = false,
@@ -70,7 +72,7 @@ public static class Tokenizer {
                 StandardOutputEncoding = Encoding.UTF8
             }
         };
-        process.StartInfo.EnvironmentVariables.Add("ESPEAK_DATA_PATH", @$"{Directory.GetCurrentDirectory()}\espeak\espeak-ng-data");
+        process.StartInfo.EnvironmentVariables.Add("ESPEAK_DATA_PATH", @$"{Directory.GetCurrentDirectory()}/espeak/espeak-ng-data");
         process.Start();
         originalSegments = process.StandardOutput.ReadToEnd();
         process.StandardOutput.Close();

@@ -20,9 +20,8 @@ With a custom phonemization solution, these additional languages are also suppor
 - `[MandarinChinese, Japanese, Hindi]`.
 
 ## How to setup
-###### You can download the Kokoro v1.0 ONNX models from [taylorchu's repository's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0).
-- **On Windows:** Install via **Nuget** ([Package Manager](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-in-visual-studio) or [CLI](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli)), then [download the ONNX model](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0), and you're set!
-- **On Linux and MacOS**: In addition to the above, you will need to manually install eSpeak NG for phonemization support. Installation instructions can be found on the [eSpeak NG GitHub repository](https://github.com/espeak-ng/espeak-ng).
+- **First, download the Kokoro v1.0 ONNX models from [taylorchu's repository's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0).**
+- **On Windows, Linux, and MacOS:** Install via **Nuget** ([Package Manager](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-in-visual-studio) or [CLI](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli)), and you're set!
 - **On Other platforms**: For platforms other than the ones above, developers are expected to provide their own phonemization solution. The built-in tokenizer supports raw `(phonemes -> tokens)` conversion.
 
 ###### The package is accessible on all .NET platforms, yet integrated phonemization is only available with the eSpeak NG backend atm.
@@ -43,7 +42,7 @@ Above is a simple way to get started on the highest level. For more control, che
 
 - All communication with the AI model and playback devices happens on background threads, letting the main thread focus on rendering the UI in peace. The library is carefully designed with thread-safety in mind.
 
-- The `voices` folder are automatically copied to your build path when you build and are ready to be accessed. Same with the `espeak` backend for Windows. Developers may opt to remove them when shipping their apps.
+- The `voices` folder are automatically copied to your build path when you build and are ready to be accessed. Same with the mentioned `espeak` backends. Developers may opt to remove them when shipping their apps.
 
 - Mind that `LoadVoicesFromPath` exists as an option, in case developers want to implement their custom voice-loading logic when shipping a project that utilizes KokoroSharp for text-to-speech synthesis.
 
@@ -52,3 +51,4 @@ Above is a simple way to get started on the highest level. For more control, che
 ## License
 - This project is licensed under the [MIT License](https://github.com/Lyrcaxis/KokoroSharp/blob/main/LICENSE).
 - The [Kokoro 82M model](https://huggingface.co/hexgrad/Kokoro-82M) and its voices are released under the [Apache License](https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md).
+- eSpeak NG is licensed under the [GPLv3 License](https://github.com/espeak-ng/espeak-ng/blob/master/COPYING).

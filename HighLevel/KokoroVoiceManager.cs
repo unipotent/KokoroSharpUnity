@@ -16,7 +16,7 @@ public static class KokoroVoiceManager {
         var voiceFilePaths = Directory.GetFiles(voicesPath);
 
         foreach (var filePath in voiceFilePaths) {
-            if (!loadedFilePaths.Add(filePath)) { continue; }
+            if (!loadedFilePaths.Add(filePath) || !filePath.EndsWith(".npy")) { continue; }
             var voiceName = Path.GetFileNameWithoutExtension(filePath);
             var voiceFeatures = np.Load<float[,,]>(filePath);
             Voices.Add(new() { Name = voiceName, Features = voiceFeatures });
