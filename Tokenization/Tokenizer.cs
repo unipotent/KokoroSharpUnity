@@ -3,7 +3,6 @@
 using KokoroSharp.Internal;
 
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 

@@ -13,7 +13,7 @@ public static class SegmentationSystem {
     /// <summary> Turns the input tokens into multiple segments, aggressively optimized for streaming. Then returns the segments in a list. </summary>
     /// <remarks> This is just so the audio can be played back with the first part, while the model is still processing the rest of the sequence. </remarks>
     /// <param name="segmentationStrategy">The segmentation strategy that will be used to chunk the tokens into segments.</param>
-    public static List<int[]> SplitToSegments(int[] tokens, SegmentationStrategy segmentationStrategy) {
+    public static List<int[]> SplitToSegments(int[] tokens, DefaultSegmentationConfig segmentationStrategy) {
         var (minFirstSegmentLength, maxFirstSegmentLength, maxSecondSegmentLength, minFollowupSegmentsLength) = (segmentationStrategy.MinFirstSegmentLength, segmentationStrategy.MaxFirstSegmentLength, segmentationStrategy.MaxSecondSegmentLength, segmentationStrategy.MinFollowupSegmentsLength);
 
         if (tokens.Length <= maxFirstSegmentLength) { return [tokens]; }

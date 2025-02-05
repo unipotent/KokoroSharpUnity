@@ -8,12 +8,12 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>0.4.0</Version>
+        <Version>0.4.1</Version>
         <PackageId>KokoroSharp</PackageId>
         <Authors>Lyrcaxis</Authors>
         <Description>An inference engine for Kokoro TTS with ONNX runtime, enabling fast and flexible local text-to-speech (fp/quanted) purely via C#. It features segment streaming, voice mixing, linear job scheduling, and optional playback.</Description>
         <RepositoryUrl>https://github.com/Lyrcaxis/KokoroSharp</RepositoryUrl>
-        <PackageTags>Kokoro, TextToSpeech, TTS, ONNX, AI, SpeechSynthesis, Text, To, Speech, CrossPlatform, .NET, Windows, Linux, MacOS, Offline</PackageTags>
+        <PackageTags>Kokoro, TextToSpeech, TTS, ONNX, AI, SpeechSynthesis, Text, To, Speech, .NET, Windows, Linux, MacOS, CrossPlatform, Offline</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

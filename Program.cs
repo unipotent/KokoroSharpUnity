@@ -52,13 +52,13 @@ internal class Program {
             KokoroPlayback playback = new KokoroPlayback();
             // *KokoroPlayback* equivalent of `tts.StopPlayback()` is 'playback.StopPlayback()'.
             playback.NicifySamples = true; // Optionally, trim the otherwise silent samples, for even faster responses.
-            var segmentationStrategy = new SegmentationStrategy() { SecondsOfPauseBetweenProperSegments = new(CommaPause: 0f) };
+            var segmentationStrategy = new KokoroTTSPipelineConfig() { SecondsOfPauseBetweenProperSegments = new(CommaPause: 0f) };
 
             // From here on, these will enqueue to the same `playback` instance, ensuring audio will not overlap.
             // Also, the callbacks are built-in inside `KokoroTTS`, so if you want them, you'd have to create your own.
             // Feel free to check out how it's done there, use it as an example, and tweak it to your liking!
             int[] tokens = Tokenizer.Tokenize(txt); // (1D array)
-            List<int[]> ttokens = SegmentationSystem.SplitToSegments(tokens, segmentationStrategy); // (2D array)
+            List<int[]> ttokens = SegmentationSystem.SplitToSegments(tokens, new DefaultSegmentationConfig() { MaxFirstSegmentLength = 100 }); // (2D array)
 
 
             // Mixing voices is easy, and you can mix as many as you want together, even ones intended for different languages!
