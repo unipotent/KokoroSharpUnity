@@ -49,7 +49,7 @@ public static class Tokenizer {
 
     /// <summary> Converts the input text into the corresponding phonemes, with slight preprocessing and post-processing to preserve punctuation and other TTS essentials. </summary>
     static string Phonemize(string inputText, string langCode, bool preprocess = true) {
-        var preprocessedText = preprocess ? PreprocessText(inputText) : inputText;
+        var preprocessedText = preprocess ? PreprocessText(inputText, langCode) : inputText;
         var phonemeList = Phonemize_Internal(preprocessedText, out _, langCode).Split('\n');
         return PostProcessPhonemes(preprocessedText, phonemeList, langCode);
     }
@@ -79,12 +79,14 @@ public static class Tokenizer {
     }
 
     /// <summary> Normalizes the input text to what the Kokoro model would expect to see, preparing it for phonemization. </summary>
-    internal static string PreprocessText(string text) {
+    internal static string PreprocessText(string text, string langCode) {
         text = text.Normalize().Replace("\r\n", "\n").Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
-        const string t = "l®fÆ22";
-        foreach (var c in charsToReplace) { text = text.Replace(c, t); } // Replace chars espeak-ng wouldn't catch with the ':' character.
-        while (text.Contains(t + t)) { text = text.Replace(t + t, t); }  // Then, try to remove all duplicates. This'll be just the first pass.
-        text = text.Replace(t, ":"); // Now we have got rid of all the duplicate symbol punctuations, and we'll preserve them as ':' characters.
+        if (langCode == "en-us") {
+            const string t = "l®fÆ22";
+            foreach (var c in charsToReplace) { text = text.Replace(c, t); } // Replace chars espeak-ng wouldn't catch with the ':' character.
+            while (text.Contains(t + t)) { text = text.Replace(t + t, t); }  // Then, try to remove all duplicates. This'll be just the first pass.
+            text = text.Replace(t, ":"); // Now we have got rid of all the duplicate symbol punctuations, and we'll preserve them as ':' characters.
+        }
 
         text = Regex.Replace(text, @"[$€£¥₹₽₩₺₫]\d+(?:\.\d+)?", FlipMoneyMatch);
         for (int i = 0; i < 5; i++) {
