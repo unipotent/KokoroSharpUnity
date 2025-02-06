@@ -12,8 +12,6 @@ using System.Text.RegularExpressions;
 /// <para> Phonemization happens via the espeak-ng library: <b>https://github.com/espeak-ng/espeak-ng/blob/master/docs/guide.md</b> </para>
 /// </remarks>
 public static class Tokenizer {
-    static string[] charsToReplace = ["\n", "(", ")", "[", "]"];  // We replace these characters with the ':' token, so they'll be caught by espeak-ng.
-    internal static HashSet<char> superstopSymbols = [.. ":"];  // Perfect for segmentation.
     internal static HashSet<char> punctuation = [.. ":,.!?"];   // Lines split on any of these occurences, by design via espeak-ng.
     static Dictionary<char, string> currencies = new() { { '$', "dollar" }, { '€', "euro" }, { '£', "pound" }, { '¥', "yen" }, { '₹', "rupee" }, { '₽', "ruble" }, { '₩', "won" }, { '₺', "lira" }, { '₫', "dong" } };
 
@@ -90,12 +88,6 @@ public static class Tokenizer {
         }
         text = text.Replace(".com", "dot com").Replace("https://", "https ");
         text = text.Normalize().Replace("\r\n", "\n").Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
-        if (langCode == "en-us") {
-            const string t = "l®fÆ22";
-            foreach (var c in charsToReplace) { text = text.Replace(c, t); } // Replace chars espeak-ng wouldn't catch with the ':' character.
-            while (text.Contains(t + t)) { text = text.Replace(t + t, t); }  // Then, try to remove all duplicates. This'll be just the first pass.
-            text = text.Replace(t, ":"); // Now we have got rid of all the duplicate symbol punctuations, and we'll preserve them as ':' characters.
-        }
         text = Regex.Replace(text, @"[$€£¥₹₽₩₺₫]\d+(?:\.\d+)?", FlipMoneyMatch);
         text = Regex.Replace(text, @"\bD[Rr]\.(?= [A-Z])", "Doctor");
         text = Regex.Replace(text, @"\b(Mr|MR)\.(?= [A-Z])", "Mister");
@@ -133,9 +125,6 @@ public static class Tokenizer {
         // Restoration of punctuation and spacing.
         var sb = new StringBuilder();
         for (int i = 0; i < phonemesArray.Length; i++) {
-            // First, finalize the parenthesis retrieval hack -- remove any duplicate columns that may have sneaked in.
-            while (phonemesArray[i].StartsWith("kˈoʊlən ")) { phonemesArray[i] = phonemesArray[i]["kˈoʊlən ".Length..]; }
-            while (phonemesArray[i].StartsWith(" kˈoʊlən")) { phonemesArray[i] = phonemesArray[i][" kˈoʊlən".Length..]; }
             sb.Append(phonemesArray[i]);
             if (puncs.Count > i) { sb.Append(puncs[i]); }
         }

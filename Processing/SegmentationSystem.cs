@@ -9,7 +9,7 @@ using static Tokenizer;
 /// <summary> Helper class that allows turning text tokens into segments, allowing us to get the first response of the model quicker. </summary>
 /// <remarks> This allows us to begin playing back the audio of the first sentence, while the model processes the rest of the sequence on the background. </remarks>
 public static class SegmentationSystem {
-    static HashSet<int> properEndSeqTokens = [Vocab['.'], Vocab[':'], Vocab['!'], Vocab['?']];
+    static HashSet<int> properEndSeqTokens = [Vocab['.'], Vocab['!'], Vocab['?'], Vocab[':']];
     static HashSet<int> fallbackEndTokens = [Vocab[','], Vocab[' ']];
 
     static List<int> reusableTempList = [];

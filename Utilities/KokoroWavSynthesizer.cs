@@ -39,7 +39,7 @@ public class KokoroWavSynthesizer : KokoroEngine {
         var phonemesCache = segments.Count > 1 ? new List<char>() : null;
         foreach (var step in job.Steps) {
             step.OnStepComplete = (samples) => {
-                Debug.WriteLine($"[{job.Steps.IndexOf(step)}/{job.Steps.Count}] Retrieved {samples.Length} samples.");
+                Debug.WriteLine($"[{job.Steps.IndexOf(step) + 1}/{job.Steps.Count}] Retrieved {samples.Length} samples.");
                 bytes.AddRange(KokoroPlayback.GetBytes(KokoroPlayback.PostProcessSamples(samples)));
                 if (!Tokenizer.PunctuationTokens.Contains(step.Tokens[^1])) { return; }
                 var secondsToWait = pipelineConfig.SecondsOfPauseBetweenProperSegments[Tokenizer.TokenToChar[step.Tokens[^1]]];

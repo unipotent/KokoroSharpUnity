@@ -36,7 +36,7 @@ while (true) { tts.SpeakFast(Console.ReadLine(), heartVoice); } // .. and have i
 
 Above is a simple way to get started on the highest level. For more control, check out [the example Program](https://github.com/Lyrcaxis/KokoroSharp/blob/main/Program.cs), which covers more advanced parts like job scheduling, voice mixing, and long-term, speaker-agnostic playback queuing.
 
-###### The above example requires an internet connection. For fully offline use, you can utliize `KokoroTTS.LoadModel("path/to/model")`. Models can be found on [taylorchu's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0). Check out the various overloads of `KokoroTTS.LoadModel` for background loading.
+###### The above example requires an internet connection. For fully offline use, you can utilize `KokoroTTS.LoadModel("path/to/model")`. Models can be found on [taylorchu's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0). Check out the various overloads of `KokoroTTS.LoadModel` for background loading.
 
 ## Notes
 - KokoroSharp prioritizes a smooth developer experience by logging potential misuse instead of throwing exceptions. Wherever possible, the library attempts to automatically resolve issues to minimize disruptions.
