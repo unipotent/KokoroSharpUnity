@@ -1,4 +1,4 @@
-﻿namespace KokoroSharp.Internal;
+﻿namespace KokoroSharp.Core;
 
 using NAudio.Wave;
 
@@ -6,7 +6,7 @@ using OpenTK.Audio.OpenAL;
 
 using System.Diagnostics;
 
-/// <summary> Base class for cross platform playback, with API compatible with NAudio's API. </summary>
+/// <summary> Base class for cross platform audio playback, with API mostly compatible with NAudio's <see cref="WaveOutEvent"/> API. </summary>
 /// <remarks> Each platform (Windows/Linux/MacOS) derives from this to expose a nice interface back to KokoroSharp. </remarks>
 public abstract class KokoroWaveOutEvent {
     public RawSourceWaveStream stream { get; private set; }
@@ -26,7 +26,7 @@ public abstract class KokoroWaveOutEvent {
     /// <summary> Adjust the volume of the playback. [0.0, to 1.0] </summary>
     public abstract void SetVolume(float volume);
 
-    /// <summary> Disposes the instance. </summary>
+    /// <summary> Disposes the instance, freeing up any memory or threads it uses. </summary>
     public abstract void Dispose();
 
     /// <summary> Gets the percentage of how much audio has already been played back. </summary>

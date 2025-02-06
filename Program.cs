@@ -1,7 +1,7 @@
 ﻿namespace KokoroSharp;
 
 using KokoroSharp.Core;
-using KokoroSharp.Tokenization;
+using KokoroSharp.Processing;
 
 using System.Diagnostics;
 
@@ -15,7 +15,7 @@ internal class Program {
 
     static void Main(string[] _) {
         // You'll need to download the model first. You can find it in https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0.
-        using KokoroTTS tts = new(@"kokoro.onnx") { NicifyAudio = true }; // The high level inference engine provided by KokoroSharp. We instantiate once, cache it, and reuse it.
+        using KokoroTTS tts = KokoroTTS.LoadModel(); // The high level inference engine provided by KokoroSharp. We instantiate once, cache it, and reuse it.
         //KokoroVoiceManager.LoadVoicesFromPath("voices"); // The voices are pre-bundled with the package in "/voices", but can still be loaded manually from a different path if needed.
         KokoroVoice sarah = KokoroVoiceManager.GetVoice("af_sarah"); // Once the voices are loaded, they can be retrieved instantly from memory.
         KokoroVoice nicole = KokoroVoiceManager.GetVoice("af_nicole"); // Kokoro always needs a voice for inference.
@@ -45,7 +45,7 @@ internal class Program {
             // Although, what's MORE SUITABLE for more advanced tasks, is the `tts.EnqueueJob` method,
             // .. because it allows queueing up multiple *inference jobs* to the engine asynchronously,
             // .. and when, in order, one gets completed, the audio is also being played back in order.
-            tts.StopPlayback(); // Immediately stops any ongoing playbacks invoked via `Speak`/`SpeakFast`.
+            tts.StopPlayback(); // Immediately stops any ongoing playbacks and jobs invoked via `Speak`/`SpeakFast`.
 
             // Note that the `KokoroTTS` instance hosts its own instance of `KokoroPlayback`, for convenience,
             // .. but for anything more advanced than `SpeakFast`, you'll need to provide your own, or an alternative.
@@ -69,7 +69,7 @@ internal class Program {
             mixedVoice.Rename("Mixed Voice", KokoroLanguage.BritishEnglish, KokoroGender.Female);
 
             // You can inference with a 1D token array, waiting until the full inference completes before hearing back (up to 510 tokens).
-            tts.EnqueueJob(KokoroJob.Create(tokens, mixedVoice, speed:1f, playback.Enqueue));
+            tts.EnqueueJob(KokoroJob.Create(tokens, mixedVoice, speed:1f, playback.Enqueue)).Cancel();
 
             // Or with 2D token array, processing them segment-by-segment, hearing back as quickly as possible (same with `tts.SpeakFast()`).
             // .. 2D arrays are not restricted by the 510 token limit, because none of the segments will surpass that.

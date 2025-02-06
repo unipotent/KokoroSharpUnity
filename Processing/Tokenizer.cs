@@ -1,6 +1,6 @@
-﻿namespace KokoroSharp.Tokenization;
+﻿namespace KokoroSharp.Processing;
 
-using KokoroSharp.Internal;
+using KokoroSharp.Utilities;
 
 using System.Diagnostics;
 using System.Text;

@@ -1,7 +1,7 @@
 ﻿namespace KokoroSharp;
 
 using KokoroSharp.Core;
-using KokoroSharp.Tokenization;
+using KokoroSharp.Processing;
 
 using Microsoft.ML.OnnxRuntime;
 
@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 /// <summary> Highest level module that allows easy inference with the model. </summary>
 /// <remarks> Contains a background worker thread that dispatches queued jobs/actions linearly. </remarks>
-public sealed class KokoroTTS : KokoroEngine {
+public sealed partial class KokoroTTS : KokoroEngine {
     /// <summary> Callback raised when playback for given speech request just started. </summary>
     /// <remarks> Can be used to retrieve info about the original task, including spoken text, and phonemes. </remarks>
     public event Action<SpeechStartPacket> OnSpeechStarted;

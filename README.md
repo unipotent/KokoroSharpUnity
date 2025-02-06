@@ -1,11 +1,12 @@
 [![NuGet](https://img.shields.io/nuget/v/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
 
 # KokoroSharp
 KokoroSharp is a fully-featured inference engine for [Kokoro TTS](https://huggingface.co/spaces/hexgrad/Kokoro-TTS), built entirely in C# with ONNX runtime.
 It enables developers to perform flexible and fast text-to-speech synthesis utilizing multiple speakers and languages.
 
 ## Features
-- Plug & Play integration via the nuget package. All dependencies except the model are handled automatically.
+- Plug & Play integration via the nuget package. All dependencies are handled automatically.
 - Nuget package includes [ALL voices made released by hexgrad with their Kokoro 82M v1.0 release](https://huggingface.co/hexgrad/Kokoro-82M/tree/main/voices).
 - High-level interface designed to suit both beginners and power users.
 - Text-segment streaming for seamless text-to-speech. Responses feel instant.
@@ -20,7 +21,6 @@ With a custom phonemization solution, these additional languages are also suppor
 - `[MandarinChinese, Japanese, Hindi]`.
 
 ## How to setup
-- **First, download the Kokoro v1.0 ONNX models from [taylorchu's repository's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0).**
 - **On Windows, Linux, and MacOS:** Install via **Nuget** ([Package Manager](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-in-visual-studio) or [CLI](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli)), and you're set!
 - **On Other platforms**: For platforms other than the ones above, developers are expected to provide their own phonemization solution. The built-in tokenizer supports raw `(phonemes -> tokens)` conversion.
 
@@ -28,7 +28,7 @@ With a custom phonemization solution, these additional languages are also suppor
 
 ## Getting started
 ```csharp
-KokoroTTS tts = new(@"path\to\your\kokoro_model.onnx"); // Initialize the model
+KokoroTTS tts = KokoroTTS.LoadModel(); // Load or download the model (~320MB for full precision)
 KokoroVoice heartVoice = KokoroVoiceManager.GetVoice("af_heart"); // Grab a voice of your liking,
 while (true) { tts.SpeakFast(Console.ReadLine(), heartVoice); } // .. and have it speak your text!
 // Note: Language detection is automated based on what the loaded voice supports.
@@ -36,6 +36,7 @@ while (true) { tts.SpeakFast(Console.ReadLine(), heartVoice); } // .. and have i
 
 Above is a simple way to get started on the highest level. For more control, check out [the example Program](https://github.com/Lyrcaxis/KokoroSharp/blob/main/Program.cs), which covers more advanced parts like job scheduling, voice mixing, and long-term, speaker-agnostic playback queuing.
 
+###### The above example requires an internet connection. For fully offline use, you can utliize `KokoroTTS.LoadModel("path/to/model")`. Models can be found on [taylorchu's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0). Check out the various overloads of `KokoroTTS.LoadModel` for background loading.
 
 ## Notes
 - KokoroSharp prioritizes a smooth developer experience by logging potential misuse instead of throwing exceptions. Wherever possible, the library attempts to automatically resolve issues to minimize disruptions.

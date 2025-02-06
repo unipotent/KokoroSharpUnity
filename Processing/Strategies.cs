@@ -1,7 +1,11 @@
-﻿namespace KokoroSharp.Core;
+﻿namespace KokoroSharp.Processing;
 
-using KokoroSharp.Tokenization;
 
+/// <summary> A way for users to control how segmentation happens over the tokens, allowing 100% custom solutions. </summary>
+/// <remarks> Essentially a <see cref="Func{T, TResult}"/> with input tokens as <b>T</b>, and list of segments (tokens) as <b>TResult</b>. </remarks>
+/// <param name="tokens">The list of tokens to apply segmentation on.</param>
+/// <returns>The segments the original tokens were chunked to. Each segment will be converted to audio separately, and will be played separately as well. </returns>
+public delegate List<int[]> SegmentationDelegate(int[] tokens);
 
 /// <summary>
 /// <para> Allows defining various rules regarding the TTS pipeline. Has nice defaults, and is fully customizable. </para>
@@ -29,12 +33,6 @@ public class KokoroTTSPipelineConfig {
     /// <summary> A pipeline config that uses the default segmentation strategy with custom segmentation parameters. </summary>
     public KokoroTTSPipelineConfig(DefaultSegmentationConfig segmentationConfig) : this() => SegmentationFunc = (t) => SegmentationSystem.SplitToSegments(t, segmentationConfig);
 }
-
-/// <summary> A way for users to control how segmentation happens over the tokens, allowing 100% custom solutions. </summary>
-/// <remarks> Essentially a <see cref="Func{T, TResult}"/> with input tokens as <b>T</b>, and list of segments (tokens) as <b>TResult</b>. </remarks>
-/// <param name="tokens">The list of tokens to apply segmentation on.</param>
-/// <returns>The segments the original tokens were chunked to. Each segment will be converted to audio separately, and will be played separately as well. </returns>
-public delegate List<int[]> SegmentationDelegate(int[] tokens);
 
 /// <summary> Helper class that allows defining amount of seconds will be injected as empty audio between segments that end in a proper punctuation. </summary>
 /// <remarks> This'll allow us to emulate natural pause even on the nicified audio (<see cref="KokoroPlayback.NicifySamples"/>). <b>NOTE:</b> Segments that end on a space or mid-word will <b>NOT</b> get any additional pause. </remarks>

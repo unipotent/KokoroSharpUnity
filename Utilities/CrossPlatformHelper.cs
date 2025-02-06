@@ -1,4 +1,6 @@
-﻿namespace KokoroSharp.Internal;
+﻿namespace KokoroSharp.Utilities;
+
+using KokoroSharp.Core;
 
 using System.Runtime.InteropServices;
 

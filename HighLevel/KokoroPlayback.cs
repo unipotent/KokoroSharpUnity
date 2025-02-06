@@ -1,7 +1,7 @@
 ﻿namespace KokoroSharp;
 
 using KokoroSharp.Core;
-using KokoroSharp.Internal;
+using KokoroSharp.Utilities;
 
 using NAudio.Wave;
 using System.Collections.Concurrent;
@@ -59,9 +59,15 @@ public sealed class KokoroPlayback : IDisposable {
         return packet;
     }
 
-    /// <summary> Stops the playback of the currently playing samples. The next samples that are queued (if any) will begin playing immediately. </summary>
+    /// <summary> Stops the playback of the currently playing samples. This will also trigger callbacks. The next samples that are queued (if any) will begin playing immediately. </summary>
     /// <remarks> Note that this will NOT completely stop this instance from playing audio. To completely dispose this, call the `Dispose()` method. </remarks>
-    public void StopPlayback() => waveOut.Stop();
+    public void StopPlayback(bool clearQueue = false) {
+        waveOut.Stop();
+        if (clearQueue) {
+            foreach (var p in queuedPackets) { p.Abort(false); }
+            queuedPackets.Clear();
+        }
+    }
 
     /// <summary> Adjust the volume of the playback. [0.0, to 1.0] </summary>
     public void SetVolume(float volume) => waveOut.SetVolume(Math.Clamp(volume, 0f, 1f));

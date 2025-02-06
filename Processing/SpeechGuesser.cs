@@ -1,4 +1,4 @@
-﻿namespace KokoroSharp.Tokenization;
+﻿namespace KokoroSharp.Processing;
 
 using KokoroSharp.Core;
 
