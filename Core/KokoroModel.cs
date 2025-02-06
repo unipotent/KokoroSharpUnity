@@ -44,13 +44,14 @@ public sealed class KokoroModel : IDisposable {
         for (int i = 0; i < inputTokens.Length; i++) { tokenTensor[0, i] = inputTokens[i]; }
 
         var inputs = new List<NamedOnnxValue> { GetOnnxValue("tokens", tokenTensor), GetOnnxValue("style", styleTensor), GetOnnxValue("speed", speedTensor) };
-        using var results = session.Run(inputs);
-        return [.. results[0].AsTensor<float>()];
-
+        lock (session) {
+            using var results = session.Run(inputs);
+            return [.. results[0].AsTensor<float>()];
+        }
         NamedOnnxValue GetOnnxValue<T>(string name, DenseTensor<T> val) => NamedOnnxValue.CreateFromTensor(name, val);
     }
 
     public void Dispose() {
-        session.Dispose();
+        lock (session) { session.Dispose(); }
     }
 }

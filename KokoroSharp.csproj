@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>0.4.5</Version>
+        <Version>0.4.6</Version>
         <PackageId>KokoroSharp</PackageId>
         <Authors>Lyrcaxis</Authors>
         <Description>An inference engine for Kokoro TTS with ONNX runtime, enabling fast and flexible local text-to-speech (fp/quanted) purely via C#. It features segment streaming, voice mixing, linear job scheduling, and optional playback.</Description>

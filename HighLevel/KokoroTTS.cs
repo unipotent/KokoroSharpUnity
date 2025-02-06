@@ -50,7 +50,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
     /// <param name="voice"> The voice that will speak it. Can also be a <see cref="KokoroVoice"/>. </param>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
     public SynthesisHandle Speak(string text, KokoroVoice voice, KokoroTTSPipelineConfig segmentationStrategy = null)
-        => Speak_Phonemes(text, Tokenizer.Tokenize(text, voice.GetLangCode(), segmentationStrategy?.PreprocessText ?? true), voice, segmentationStrategy, fast: false);
+        => Speak_Phonemes(text, Tokenizer.Tokenize(text.Trim(), voice.GetLangCode(), segmentationStrategy?.PreprocessText ?? true), voice, segmentationStrategy, fast: false);
 
     /// <summary> Segments the text before speaking it with the specified voice, resulting in an almost immediate response for the first chunk, with a potential hit in quality. </summary>
     /// <remarks> This is the simplest, highest-level interface of the library. For more fine-grained controls, see <see cref="KokoroEngine"/>.</remarks>
@@ -58,7 +58,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
     /// <param name="voice"> The voice that will speak it. Can be loaded via <see cref="KokoroVoiceManager.GetVoice(string)"/>. </param>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
     public SynthesisHandle SpeakFast(string text, KokoroVoice voice, KokoroTTSPipelineConfig segmentationStrategy = null)
-        => Speak_Phonemes(text, Tokenizer.Tokenize(text, voice.GetLangCode(), segmentationStrategy?.PreprocessText ?? true), voice, segmentationStrategy, fast: true);
+        => Speak_Phonemes(text, Tokenizer.Tokenize(text.Trim(), voice.GetLangCode(), segmentationStrategy?.PreprocessText ?? true), voice, segmentationStrategy, fast: true);
 
     /// <summary> Optional way to speak a pre-phonemized input. For actual <b>"text"</b>-to-speech inference, use <b>Speak(..)</b> and <b>SpeakFast(..)</b>. </summary>
     /// <remarks> Specifying 'fast = true' will segment the audio before speaking it. Token arrays of length longer than the model's max (510 tokens) will be trimmed otherwise. </remarks>
