@@ -58,6 +58,7 @@ public class PauseAfterSegmentStrategy {
     }
 }
 
+
 /// <summary>
 /// <para> Allows defining various rules helpful for customizing the default segmentation pipeline. Segmentation allows *chunking* the text so the first parts of it will be processed quicker. </para>
 /// <para> This is crucial to allow seamless audio playback, because follow-up chunks can be processed in the background while the audio output from the previous chunks is playing. </para>
@@ -83,6 +84,6 @@ public class DefaultSegmentationConfig {
     public int MaxSecondSegmentLength = 100;
 
     /// <summary> The minimum allowed length of follow-up segments. Any 100% valid punctuation found after THIS many tokens will mark a new segment. </summary>
-    /// <remarks> These can be long since they'll be processed in the background while the audio is playing. *NOTE: Having this too high might slow down "CANCEL" operations, since we can't cancel ONNX requests* </remarks>
+    /// <remarks> These can be long since they'll be processed in the background while the audio is playing. *NOTE: Having this too high might delay "CANCEL" operations, since we can't cancel ongoing ONNX requests* </remarks>
     public int MinFollowupSegmentsLength = 200;
 }
