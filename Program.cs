@@ -69,7 +69,7 @@ internal class Program {
             mixedVoice.Rename("Mixed Voice", KokoroLanguage.BritishEnglish, KokoroGender.Female);
 
             // You can inference with a 1D token array, waiting until the full inference completes before hearing back (up to 510 tokens).
-            tts.EnqueueJob(KokoroJob.Create(tokens, mixedVoice, speed:1f, playback.Enqueue)).Cancel();
+            tts.EnqueueJob(KokoroJob.Create(tokens, mixedVoice, speed:1f, playback.Enqueue));
 
             // Or with 2D token array, processing them segment-by-segment, hearing back as quickly as possible (same with `tts.SpeakFast()`).
             // .. 2D arrays are not restricted by the 510 token limit, because none of the segments will surpass that.

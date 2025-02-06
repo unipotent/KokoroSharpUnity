@@ -24,6 +24,10 @@ public class KokoroTTSPipelineConfig {
     /// <remarks> This'll allow us to emulate natural pause even on the nicified audio (<see cref="KokoroPlayback.NicifySamples"/>). <b>NOTE:</b> Segments that end on a space or mid-word will <b>NOT</b> get any additional pause. </remarks>
     public PauseAfterSegmentStrategy SecondsOfPauseBetweenProperSegments = new();
 
+    /// <summary> Toggles whether the text should be pre-processed before tokenization. Can be toggled off if text is already pre-processed, or the default pre-processing is not ideal on a specific use-case. </summary>
+    /// <remarks> Preprocessing includes various nicifications like preserving symbols that wouldn't be caught by espeak-ng, and some other speaking conveniences that usually apply <b>(e.g.: $1 to "one dollar" instead of "dollar one")</b>. </remarks>
+    public bool PreprocessText { get; set; } = true;
+
     /// <summary> A pipeline config that uses the KokoroSharp defaults for the whole TTS pipeline. </summary>
     public KokoroTTSPipelineConfig() { }
 

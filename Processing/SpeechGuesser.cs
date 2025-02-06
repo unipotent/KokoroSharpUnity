@@ -16,16 +16,16 @@ public static class SpeechGuesser {
     /// <summary> Guesses the spoken text, based on the phonemes that were spoken, with the algorithm: <b>charsSpoken = (TotalSpokenPercent * TotalCharLength)</b>. </summary>
     /// <remarks> It is quick and should cover most needs. For higher precision, consider [...other modes not implemented yet...]. </remarks>
     /// <returns> A quick guess regarding the text that was spoken. The low-effort mode will likely be inaccurate, but enough for most use-cases. </returns>
-    public static string GuessSpeech_LowEffort(SpeechInfoPacket info) {
+    public static string GuessSpeech_LowEffort(SpeechInfoPacket info, KokoroTTSPipelineConfig pipelineConfig) {
         var totalTokens = info.AllTokens.Sum(x => x.Length);
         var bigT = 0f; // The percentage of speech we're on for the TOTAL job.
         for (int i = 0; i < info.SegmentIndex; i++) { bigT += info.AllTokens[i].Length / (float) totalTokens; }
         bigT += info.SegmentCutT * (info.AllTokens[info.SegmentIndex].Length / (float) totalTokens);
-        
+
         var roughSpokenCharsCountEstimate = (int) Math.Round(bigT * info.OriginalText.Length);
         return info.OriginalText[..roughSpokenCharsCountEstimate]; // very rough guess...
     }
 
-    public static string GuessSpeech_MidEffort(SpeechInfoPacket info) => throw new NotImplementedException();
-    public static string GuessSpeech_HighEffort(SpeechInfoPacket info) => throw new NotImplementedException();
+    public static string GuessSpeech_MidEffort(SpeechInfoPacket info, KokoroTTSPipelineConfig pipelineConfig) => throw new NotImplementedException();
+    public static string GuessSpeech_HighEffort(SpeechInfoPacket info, KokoroTTSPipelineConfig pipelineConfig) => throw new NotImplementedException();
 }

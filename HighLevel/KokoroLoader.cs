@@ -26,7 +26,7 @@ public partial class KokoroTTS {
     public static async Task<KokoroTTS> LoadModelAsync(KModel model = float32, Action<float> OnDownloadProgress = null, SessionOptions sessionOptions = null) {
         // If the model already exists on disk, just use that.
         if (IsDownloaded(model)) { return new KokoroTTS(ModelNamesMap[model], options: sessionOptions); }
-        Debug.WriteLine("Downloading");
+
         // Otherwise, download it to disk.
         using var client = new HttpClient();
         using var response = await client.GetAsync(URL(model), HttpCompletionOption.ResponseHeadersRead);
