@@ -129,6 +129,7 @@ public static class Tokenizer {
             if (puncs.Count > i) { sb.Append(puncs[i]); }
         }
         var phonemes = sb.ToString().Trim();
+        if (punctuation.Contains(initialText[^1])) { phonemes += initialText[^1]; }
 
         // Refinement of various phonemes and condensing of symbols.
         for (int i = 0; i < 5; i++) { phonemes = phonemes.Replace("  ", " "); }
