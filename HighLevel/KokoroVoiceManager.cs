@@ -23,7 +23,7 @@ public static class KokoroVoiceManager {
         }
     }
 
-    /// <summary> Retrieves a loaded voice by name, including the language and gender prefix. </summary>
+    /// <summary> Retrieves a loaded voice by name, including the language and gender prefix. Use <b>GetVoices</b> to see the full list. </summary>
     /// <remarks> Customly mixed voices will not be considered unless named and added to <see cref="Voices"/>. </remarks>
     public static KokoroVoice GetVoice(string name) {
         if (Voices.Count == 0) { LoadVoicesFromPath(); }
