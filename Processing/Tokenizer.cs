@@ -80,7 +80,15 @@ public static class Tokenizer {
     }
 
     /// <summary> Normalizes the input text to what the Kokoro model would expect to see, preparing it for phonemization. </summary>
+    /// <remarks> In addition, converts various "written" text to "spoken" form (e.g. $1 --> "one dollar" instead of "dollar one". </remarks>
     internal static string PreprocessText(string text, string langCode) {
+        text = Regex.Replace(text, @"\[(.*?)\]\(.*?\)", "$1"); // Discard links appearing in `[Header](link)` format.
+        text = Regex.Replace(text, @"\[.*?\[(.*?)\].*?\]\(.*?\)|\[(.*?)\]\(.*?\)", "$1$2");
+        for (int i = 0; i < 5; i++) {
+            text = Regex.Replace(text, @"(\d)\.(\d)", m => m.Value.Replace(".", " point "));
+            text = Regex.Replace(text, @"\b(https?://)?(www\.)?[a-zA-Z0-9]+\b|\b[a-zA-Z0-9]+\.(com|net|org|io|edu|gov|mil|info|biz|co|us|uk|ca|de|fr|jp|au|cn|ru|gr)\b", m => m.Value.Replace(".", " dot "));
+        }
+        text = text.Replace(".com", "dot com").Replace("https://", "https ");
         text = text.Normalize().Replace("\r\n", "\n").Replace("“", "").Replace("”", "").Replace("«", "").Replace("»", "").Replace("\"", "").Replace("**", "*");
         if (langCode == "en-us") {
             const string t = "l®fÆ22";
@@ -88,12 +96,7 @@ public static class Tokenizer {
             while (text.Contains(t + t)) { text = text.Replace(t + t, t); }  // Then, try to remove all duplicates. This'll be just the first pass.
             text = text.Replace(t, ":"); // Now we have got rid of all the duplicate symbol punctuations, and we'll preserve them as ':' characters.
         }
-
         text = Regex.Replace(text, @"[$€£¥₹₽₩₺₫]\d+(?:\.\d+)?", FlipMoneyMatch);
-        for (int i = 0; i < 5; i++) {
-            text = Regex.Replace(text, @"(\d)\.(\d)", m => m.Value.Replace(".", " point "));
-            text = Regex.Replace(text, @"\bwww\.[a-zA-Z0-9]+\b|\b[a-zA-Z0-9]+\.(com|net|org|io|edu|gov|mil|info|biz|co|us|uk|ca|de|fr|jp|au|cn|ru|gr)\b", m => m.Value.Replace(".", " dot "));
-        }
         text = Regex.Replace(text, @"\bD[Rr]\.(?= [A-Z])", "Doctor");
         text = Regex.Replace(text, @"\b(Mr|MR)\.(?= [A-Z])", "Mister");
         text = Regex.Replace(text, @"\b(Ms|MS)\.(?= [A-Z])", "Miss");
