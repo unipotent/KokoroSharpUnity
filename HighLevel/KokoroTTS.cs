@@ -73,7 +73,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
         currentHandle = new SynthesisHandle() { Job = job, TextToSpeak = text };
         foreach (var step in job.Steps) {
             step.OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, ttokens, step, job, currentHandle, pipelineConfig, phonemesCache);
-            Debug.WriteLine($"[step {job.Steps.IndexOf(step)}: {new string(step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray())}]");
+            Debug.WriteLine($"[step {job.Steps.IndexOf(step)}: {new string(step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray())}]".Replace("\n", "®"));
         }
         return currentHandle;
     }

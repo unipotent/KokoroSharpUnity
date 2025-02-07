@@ -38,22 +38,26 @@ public class KokoroTTSPipelineConfig {
     public KokoroTTSPipelineConfig(DefaultSegmentationConfig segmentationConfig) : this() => SegmentationFunc = (t) => SegmentationSystem.SplitToSegments(t, segmentationConfig);
 }
 
-/// <summary> Helper class that allows defining amount of seconds will be injected as empty audio between segments that end in a proper punctuation. </summary>
-/// <remarks> This'll allow us to emulate natural pause even on the nicified audio (<see cref="KokoroPlayback.NicifySamples"/>). <b>NOTE:</b> Segments that end on a space or mid-word will <b>NOT</b> get any additional pause. </remarks>
+/// <summary>
+/// <para> Helper class that allows defining amount of seconds will be injected as empty audio between segments that end in a proper punctuation. </para>
+/// <para> This will allow us to emulate natural pause even on the nicified audio (<see cref="KokoroPlayback.NicifySamples"/>). </para>
+/// <b>NOTE:</b> Only segments that END with one of the letters will receive artificial pauses. Segments that just "speak" one of the ending tokens will not be affected.
+/// </summary>
 public class PauseAfterSegmentStrategy {
     /// <summary> The amount of seconds that should be waited after a segment with specific punctuation on the end was spoken. </summary>
-    public float this[char c] => endingPunctuationPauseSecondsMap[c];
+    public float this[char c] => endingPunctuationPauseSecondsMap.TryGetValue(c, out var p) ? p : endingPunctuationPauseSecondsMap['¿'];
 
     /// <summary> A map containing the amount of seconds that should be waited after a segment with specific punctuation on the end was spoken. </summary>
     IReadOnlyDictionary<char, float> endingPunctuationPauseSecondsMap { get; }
 
-    public PauseAfterSegmentStrategy(float CommaPause = 0.1f, float PeriodPause = 0.5f, float QuestionmarkPause = 0.5f, float ExclamationMarkPause = 0.5f, float OthersPause = 0.5f) {
+    public PauseAfterSegmentStrategy(float CommaPause = 0.1f, float PeriodPause = 0.5f, float QuestionmarkPause = 0.5f, float ExclamationMarkPause = 0.5f, float NewLinePause = 0.5f, float OthersPause = 0.5f) {
         endingPunctuationPauseSecondsMap = new Dictionary<char, float>() {
             { ',', CommaPause },
             { '.', PeriodPause },
             { '?', QuestionmarkPause },
             { '!', ExclamationMarkPause },
-            { ':', OthersPause }
+            { '\n', NewLinePause },
+            { '¿', OthersPause }
         };
     }
 }
@@ -73,11 +77,11 @@ public class PauseAfterSegmentStrategy {
 public class DefaultSegmentationConfig {
     /// <summary> The minimum allowed length of the first segment. Ensures the first segment includes AT LEAST this many tokens. </summary>
     /// <remarks> Recommended to keep this small, to allow instant responses. </remarks>
-    public int MinFirstSegmentLength = 1;
+    public int MinFirstSegmentLength = 10;
 
     /// <summary> The maximum allowed length of the first segment. *NOTE: Having this too small might cut words in the middle* </summary>
     /// <remarks> Recommended to keep this small, but not too small, to allow instant responses. </remarks>
-    public int MaxFirstSegmentLength = 40;
+    public int MaxFirstSegmentLength = 100;
 
     /// <summary> The maximum allowed length of the second segment. *NOTE: Having this too small might cut words in the middle* </summary>
     /// <remarks> Recommended to be a reasonable size based on the first segment's expected length, for seamless audio playback. </remarks>

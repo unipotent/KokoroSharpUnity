@@ -1,18 +1,21 @@
 [![NuGet](https://img.shields.io/nuget/v/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
 
+https://github.com/user-attachments/assets/869e13c1-675e-4ff8-b89a-215bb802ca39
+
 # KokoroSharp
+
 KokoroSharp is a fully-featured inference engine for [Kokoro TTS](https://huggingface.co/spaces/hexgrad/Kokoro-TTS), built entirely in C# with ONNX runtime.
 It enables developers to perform flexible and fast text-to-speech synthesis utilizing multiple speakers and languages.
 
 ## Features
 - Plug & Play integration via the nuget package. All dependencies are handled automatically.
-- Nuget package includes [ALL voices made released by hexgrad with their Kokoro 82M v1.0 release](https://huggingface.co/hexgrad/Kokoro-82M/tree/main/voices).
+- Nuget package includes [ALL voices released by hexgrad with their Kokoro 82M v1.0 release](https://huggingface.co/hexgrad/Kokoro-82M/tree/main/voices).
 - High-level interface designed to suit both beginners and power users.
 - Text-segment streaming for seamless text-to-speech. Responses feel instant.
 - Voice mixing with no restrictions on the amounts of voices mixed, and ability to save/load mixed voices.
 - Linear job scheduling with background worker as dispatcher.
-- Optional playback support with pre-integrated audio queue handling.
+- Optional multi-platform playback support with pre-integrated audio queue handling.
 
 Supports languages/accents:
 - `[American English, British English, Spanish, French, Italian, Brazilian/Portuguese]`.
@@ -36,7 +39,7 @@ while (true) { tts.SpeakFast(Console.ReadLine(), heartVoice); } // .. and have i
 
 Above is a simple way to get started on the highest level. For more control, check out [the example Program](https://github.com/Lyrcaxis/KokoroSharp/blob/main/Program.cs), which covers more advanced parts like job scheduling, voice mixing, and long-term, speaker-agnostic playback queuing.
 
-###### The above example requires an internet connection. For fully offline use, you can utilize `KokoroTTS.LoadModel("path/to/model")`. Models can be found on [taylorchu's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0). Check out the various overloads of `KokoroTTS.LoadModel` for background loading.
+###### Models can be found on [taylorchu's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0), and can be loaded via `KokoroTTS.LoadModel("path/to/model")`, or downloaded automatically with `KokoroTTS.LoadModel()`. Check out the various overloads of `KokoroTTS.LoadModel` for background loading.
 
 ## Notes
 - KokoroSharp prioritizes a smooth developer experience by logging potential misuse instead of throwing exceptions. Wherever possible, the library attempts to automatically resolve issues to minimize disruptions.

@@ -41,7 +41,7 @@ public sealed class KokoroModel : IDisposable {
         Array.Copy(tokens, 0, inputTokens, 1, T); // [0] and [^1] stay as zeroes.
 
         for (int j = 0; j < C; j++) { styleTensor[0, j] = voiceStyle[T - 1, 0, j]; }
-        for (int i = 0; i < inputTokens.Length; i++) { tokenTensor[0, i] = inputTokens[i]; }
+        for (int i = 0; i < inputTokens.Length; i++) { tokenTensor[0, i] = (inputTokens[i] >= 0 ? inputTokens[i] : 4); } // [unk] --> '.'
 
         var inputs = new List<NamedOnnxValue> { GetOnnxValue("tokens", tokenTensor), GetOnnxValue("style", styleTensor), GetOnnxValue("speed", speedTensor) };
         lock (session) {

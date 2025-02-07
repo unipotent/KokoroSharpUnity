@@ -9,6 +9,7 @@ using static Tokenizer;
 /// <summary> Helper class that allows turning text tokens into segments, allowing us to get the first response of the model quicker. </summary>
 /// <remarks> This allows us to begin playing back the audio of the first sentence, while the model processes the rest of the sequence on the background. </remarks>
 public static class SegmentationSystem {
+    static int NLToken = Vocab['\n'];
     static HashSet<int> properEndSeqTokens = [Vocab['.'], Vocab['!'], Vocab['?'], Vocab[':']];
     static HashSet<int> fallbackEndTokens = [Vocab[','], Vocab[' ']];
 
@@ -28,6 +29,10 @@ public static class SegmentationSystem {
             var (min, max, _) = GetSegmentRange(segmentsList.Count);
             for (int i = 0; i < max && (totalTokensProcessed + i < tokens.Length); i++) { reusableTempList.Add(tokens[totalTokensProcessed + i]); }
 
+            // If there's a newline token, just end it! Do not look further! It's the perfect place to segment.
+            if (reusableTempList.Contains(NLToken)) { AddRange(reusableTempList.IndexOf(NLToken) + 1); }
+            if (reusableTempList.Count == 0) { continue; }
+
             foreach (var endSeqToken in properEndSeqTokens) { // Check if we can end the sequence properly here.
                 if (reusableTempList.Contains(endSeqToken)) { // They are ordered by highest preference. Periods are nice to end it.
                     AddRange((segmentsList.Count >= 2) ? reusableTempList.LastIndexOf(endSeqToken) : reusableTempList.IndexOf(endSeqToken));
@@ -39,7 +44,7 @@ public static class SegmentationSystem {
             // If there was no *proper* end_seq punctuation [.:!?] found on the phrase, we can start searching for fallback punctuation.
             foreach (var fallbackEndToken in fallbackEndTokens) {  // This includes comma and space at the moment, in this order.
                 if (reusableTempList.Contains(fallbackEndToken)) { // So, a split on a 'comma' character will be prefered over a split on 'space'.
-                    AddRange((segmentsList.Count >= 1) ? reusableTempList.LastIndexOf(fallbackEndToken) : reusableTempList.IndexOf(fallbackEndToken));
+                    AddRange(reusableTempList.LastIndexOf(fallbackEndToken));
                     break; // For the first segment, we'll take the FIRST occassion for a quick response. For the rest, the last occassion.
                 }
             }
@@ -66,21 +71,23 @@ public static class SegmentationSystem {
         return segmentsList;
 
         void AddRange(int count) {
+            count = Math.Max(count, 1);
             int end() => totalTokensProcessed + count;
-            while ((end() < tokens.Length) && (properEndSeqTokens.Contains(tokens[end()]) || fallbackEndTokens.Contains(tokens[end()]))) { count++; }
+            var x = tokens[end()];
+            while (end() < tokens.Length && tokens[end()] != NLToken && (properEndSeqTokens.Contains(tokens[end()]) || fallbackEndTokens.Contains(tokens[end()]))) { count++; }
 
             var newEnd = Math.Min(end(), tokens.Length - 1);
             while (newEnd > totalTokensProcessed && tokens[newEnd - 1] == Vocab[' ']) { newEnd--; }
-            if (Math.Abs(newEnd - tokens.Length) < 20) { count += (tokens.Length - newEnd); newEnd = tokens.Length; }
-            if (newEnd > totalTokensProcessed) { segmentsList.Add([.. tokens[totalTokensProcessed..newEnd]]); }
-            Debug.WriteLine($"[{segmentsList.Count}](+{count} [{totalTokensProcessed}/{tokens.Length}]): {new string(tokens[totalTokensProcessed..newEnd].Select(x => TokenToChar[x]).ToArray())}");
+            if (tokens[newEnd] != NLToken && Math.Abs(newEnd - tokens.Length) < 20) { count += (tokens.Length - newEnd); newEnd = tokens.Length; }
+            if (newEnd > totalTokensProcessed + 1) { segmentsList.Add([.. tokens[totalTokensProcessed..newEnd]]); }
+            Debug.WriteLine($"[{segmentsList.Count}](+{count} [{totalTokensProcessed}/{tokens.Length}]): {new string(tokens[totalTokensProcessed..newEnd].Select(x => TokenToChar[x]).ToArray())}".Replace("\n", "®"));
             totalTokensProcessed += count;
             reusableTempList.Clear();
         }
 
         (int min, int max, int _) GetSegmentRange(int segmentIndex) {
             var ss = segmentationStrategy;
-            if (segmentIndex == 0) { return (ss.MinFirstSegmentLength, ss.MaxFirstSegmentLength, (ss.MaxFirstSegmentLength - ss.MinFirstSegmentLength) / 2); }
+            if (segmentIndex == 0) { return (Math.Min(ss.MinFirstSegmentLength, 3), ss.MaxFirstSegmentLength, (ss.MaxFirstSegmentLength - ss.MinFirstSegmentLength) / 2); }
             else if (segmentIndex == 1) { return (0, ss.MaxSecondSegmentLength, ss.MaxSecondSegmentLength); }
             else { return (ss.MinFollowupSegmentsLength, Math.Min(ss.MinFollowupSegmentsLength * 2, KokoroModel.maxTokens), ss.MinFollowupSegmentsLength); }
         }
