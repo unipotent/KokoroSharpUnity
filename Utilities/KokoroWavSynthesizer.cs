@@ -32,7 +32,7 @@ public class KokoroWavSynthesizer : KokoroEngine {
         pipelineConfig ??= defaultPipelineConfig;
         var tokens = Tokenizer.Tokenize(text.Trim(), voice.GetLangCode(), pipelineConfig.PreprocessText);
         var segments = pipelineConfig.SegmentationFunc(tokens);
-        var job = EnqueueJob(KokoroJob.Create(segments, voice, 1, null));
+        var job = EnqueueJob(KokoroJob.Create(segments, voice, pipelineConfig.Speed, null));
 
         List<byte> bytes = [];
 
@@ -59,7 +59,7 @@ public class KokoroWavSynthesizer : KokoroEngine {
         pipelineConfig ??= defaultPipelineConfig;
         var tokens = Tokenizer.Tokenize(text.Trim(), voice.GetLangCode(), pipelineConfig.PreprocessText);
         var segments = pipelineConfig.SegmentationFunc(tokens);
-        var job = EnqueueJob(KokoroJob.Create(segments, voice, 1, null));
+        var job = EnqueueJob(KokoroJob.Create(segments, voice, pipelineConfig.Speed, null));
 
         var phonemesCache = segments.Count > 1 ? new List<char>() : null;
         foreach (var step in job.Steps) {

@@ -45,7 +45,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
     public KokoroTTS(string modelPath, SessionOptions options = null) : base(modelPath, options) { }
 
     /// <summary> Speaks the text with the specified voice, without segmenting it (max 510 tokens), resulting in a slower, yet potentially higher quality response. </summary>
-    /// <remarks> This is the simplest, highest-level interface of the library. For more fine-grained controls, see <see cref="KokoroEngine"/>.</remarks>
+    /// <remarks> This is the simplest, highest-level interface of the library. For more fine-grained controls, see <see cref="KokoroEngine"/>. </remarks>
     /// <param name="text"> The text to speak. </param>
     /// <param name="voice"> The voice that will speak it. Can be loaded via <see cref="KokoroVoiceManager.GetVoice(string)"/>. </param>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
@@ -67,7 +67,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
         StopPlayback();
         pipelineConfig ??= defaultPipelineConfig;
         var ttokens = fast ? pipelineConfig.SegmentationFunc(tokens) : [tokens];
-        var job = EnqueueJob(KokoroJob.Create(ttokens, voice, 1, null));
+        var job = EnqueueJob(KokoroJob.Create(ttokens, voice, pipelineConfig.Speed, null));
 
         var phonemesCache = ttokens.Count > 1 ? new List<char>() : null;
         currentHandle = new SynthesisHandle() { Job = job, TextToSpeak = text };

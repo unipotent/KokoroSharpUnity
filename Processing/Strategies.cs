@@ -21,8 +21,12 @@ public class KokoroTTSPipelineConfig {
     };
 
     /// <summary> Defines amount of seconds will be injected as empty audio between segments that end in a proper punctuation. </summary>
-    /// <remarks> This'll allow us to emulate natural pause even on the nicified audio (<see cref="KokoroPlayback.NicifySamples"/>). <b>NOTE:</b> Segments that end on a space or mid-word will <b>NOT</b> get any additional pause. </remarks>
+    /// <remarks> This will allow us to emulate natural pause even on the nicified audio (<see cref="KokoroPlayback.NicifySamples"/>). <b>NOTE:</b> Segments that end on a space or mid-word will <b>NOT</b> get any additional pause. </remarks>
     public PauseAfterSegmentStrategy SecondsOfPauseBetweenProperSegments = new();
+
+    /// <summary> Control the 'Speed' of the speech. Recommended range: [0.5, 1.3]. </summary>
+    /// <remarks> This DIRECTLY affects the generated samples -- not only the playback. </remarks>
+    public float Speed { get; set; } = 1;
 
     /// <summary> Toggles whether the text should be pre-processed before tokenization. Can be toggled off if text is already pre-processed, or the default pre-processing is not ideal on a specific use-case. </summary>
     /// <remarks> Preprocessing includes various nicifications like preserving symbols that wouldn't be caught by espeak-ng, and some other speaking conveniences that usually apply <b>(e.g.: $1 to "one dollar" instead of "dollar one")</b>. </remarks>

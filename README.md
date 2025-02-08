@@ -4,7 +4,6 @@
 https://github.com/user-attachments/assets/82a32382-2e9b-4233-a66f-987b2802717e
 
 # KokoroSharp
-
 KokoroSharp is a fully-featured inference engine for [Kokoro TTS](https://huggingface.co/spaces/hexgrad/Kokoro-TTS), built entirely in C# with ONNX runtime.
 It enables developers to perform flexible and fast text-to-speech synthesis utilizing multiple speakers and languages.
 

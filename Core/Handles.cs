@@ -45,7 +45,7 @@ public class SynthesisHandle {
     public Action<SpeechCompletionPacket> OnSpeechCompleted;
 
     /// <summary> Callback raised when the playback was stopped amidst speech. Can retrieve which parts were spoken, in part or in full. </summary>
-    /// <remarks> Note that "Cancel" will NOT BE CALLED for speeches whose playback never ever started. </remarks>
+    /// <remarks> Note that "Cancel" will NOT BE CALLED for speeches whose playback never ever started. Consider subscribing to this in `OnSpeechStarted`. </remarks>
     public Action<SpeechCancelationPacket> OnSpeechCanceled;
 
     /// <summary> The inference job this handle is connected to. </summary>
@@ -56,12 +56,4 @@ public class SynthesisHandle {
 
     /// <summary> Contains the handles of the audio playback instances that are ready to be played. </summary>
     public List<PlaybackHandle> ReadyPlaybackHandles { get; } = [];
-
-
-    //public Action OnSynthesisStarted;
-    //public Action OnSynthesisProgressed;
-    //public Action OnSynthesisCompleted;
-
-    //public int CurrentStep { get; set; }
-    //public PlaybackHandle CurrentPlaybackHandle => ReadyPlaybackHandles[CurrentStep];
 }
