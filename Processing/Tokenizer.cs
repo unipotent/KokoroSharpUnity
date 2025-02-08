@@ -188,8 +188,6 @@ public static class Tokenizer {
             }
         }
         phonemes = phonemes.Replace("ː ", " ").Replace("ɔː", "ˌɔ").Replace("\n ", "\n");
-
-        File.WriteAllText(@"C:\Users\lyrco\source\repos\KokoroSharp\TEXT.txt", new string(phonemes.Where(Vocab.ContainsKey).ToArray()));
         return new string(phonemes.Where(Vocab.ContainsKey).ToArray());
     }
 }
