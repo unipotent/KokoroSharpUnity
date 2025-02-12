@@ -19,6 +19,10 @@ public static class Tokenizer {
     static char[] deletableCharacters = [.. "-`()[]{}"];
     //static int[] z ; // tokens that might be of interest later.
 
+    /// <summary> Path to the folder in which the espeak-ng binaries and data reside. Defaults to the folder created by the NuGet package. </summary>
+    /// <remarks> Can be overriden with a custom path if a use-case requires so. </remarks>
+    public static string eSpeakNGPath { get; set; } = Path.Combine(Directory.GetCurrentDirectory(), "espeak");
+
     public static IReadOnlyDictionary<char, int> Vocab { get; }
     public static IReadOnlyDictionary<int, char> TokenToChar { get; }
     public static HashSet<int> PunctuationTokens { get; }
@@ -51,8 +55,8 @@ public static class Tokenizer {
         return PostProcessPhonemes(preprocessedText, phonemeList, langCode);
     }
 
-    /// <summary> Invokes the espeak-ng via command line, to convert given text into phonemes. </summary>
-    /// <remarks> Espeak will return a line ending when it meets any of the <see cref="PunctuationTokens"/> and gets rid of any punctuation, so these will have to be converted back to a single-line, with the punctuation restored. </remarks>
+    /// <summary> Invokes the platform-appropriate espeak-ng executable via command line, to convert given text into phonemes. </summary>
+    /// <remarks> eSpeak NG will return a line ending when it meets any of the <see cref="PunctuationTokens"/> and gets rid of any punctuation, so these will have to be converted back to a single-line, with the punctuation restored. </remarks>
     public static string Phonemize_Internal(string text, out string originalSegments, string langCode = "en-us") {
         using var process = new Process() {
             StartInfo = new ProcessStartInfo() {
@@ -66,7 +70,7 @@ public static class Tokenizer {
                 StandardOutputEncoding = Encoding.UTF8
             }
         };
-        process.StartInfo.EnvironmentVariables.Add("ESPEAK_DATA_PATH", @$"{Directory.GetCurrentDirectory()}/espeak/espeak-ng-data");
+        process.StartInfo.EnvironmentVariables.Add("ESPEAK_DATA_PATH", @$"{eSpeakNGPath}/espeak-ng-data");
         process.Start();
         originalSegments = process.StandardOutput.ReadToEnd();
         Debug.WriteLine($"org:\n{originalSegments}---");

@@ -1,6 +1,7 @@
 ﻿namespace KokoroSharp.Utilities;
 
 using KokoroSharp.Core;
+using KokoroSharp.Processing;
 
 using System.Runtime.InteropServices;
 
@@ -15,7 +16,7 @@ public static class CrossPlatformHelper {
         if (!(OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())) { return "espeak-ng"; }
 
         // Otherwise, build the path to the binary based on PC's specs.
-        var espeak_cli_path = @$"{Directory.GetCurrentDirectory()}/espeak/espeak-ng-";
+        var espeak_cli_path = @$"{Tokenizer.eSpeakNGPath}/espeak-ng-";
         if (OperatingSystem.IsWindows()) { espeak_cli_path += "win-"; }
         else if (OperatingSystem.IsLinux()) { espeak_cli_path += "linux-"; }
         else if (OperatingSystem.IsMacOS()) { espeak_cli_path += "macos-"; }
