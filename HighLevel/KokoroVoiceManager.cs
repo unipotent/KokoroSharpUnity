@@ -10,7 +10,7 @@ public static class KokoroVoiceManager {
     static HashSet<string> loadedFilePaths = [];
 
     /// <summary> Gathers and loads all voices on the specified path. ("voices" is the default path the Nuget Package bundles the voices at). </summary>
-    /// <remarks> This exists in case developers want to ship their project with custom paths or voice loading logic. </remarks>
+    /// <remarks> This exists in case developers want to ship their project with custom paths or use custom voice loading logic. </remarks>
     public static void LoadVoicesFromPath(string voicesPath = "voices") {
         if (!Directory.Exists(voicesPath)) { throw new DirectoryNotFoundException(); }
         var voiceFilePaths = Directory.GetFiles(voicesPath);
@@ -60,7 +60,7 @@ public static class KokoroVoiceManager {
         for (int i = 0; i < voices.Length; i++) { newArray += np.array(voices[i].voice.Features) * normedWeights[i]; }
         var newFeatures = newArray.reshape(new Shape(w, h, d)).ToMuliDimArray<float>() as float[,,];
 
-        // Try to infer the name. This is crucial to preserve
+        // Try to infer the name. This is crucial to preserve the speaker's language for the new voice.
         var name = (voices[0].voice.Name.Length >= 3) ? $"{voices[0].voice.Name[..2]}_mix" : "am_mix";
         return new KokoroVoice() { Name = name, Features = newFeatures };
     }

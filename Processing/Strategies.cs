@@ -71,7 +71,6 @@ public class PauseAfterSegmentStrategy {
 /// <para> Allows defining various rules helpful for customizing the default segmentation pipeline. Segmentation allows *chunking* the text so the first parts of it will be processed quicker. </para>
 /// <para> This is crucial to allow seamless audio playback, because follow-up chunks can be processed in the background while the audio output from the previous chunks is playing. </para>
 /// <para> <b>The general segmentation rules apply as follows:</b> </para>
-/// <para> - First, we prefer [(replace, splitting between 3 paras) segmenting by <see cref="PunctuationTokens"/>, or spaces, in this order, but if shit, words may be cut. Careful note]</para>
 /// <para> - First, the algorithm tries segmenting on exact <see cref="PunctuationTokens"/>, within the allowed limits. </para>
 /// <para> - .. if there were no punctuation tokens available there, we try to segment on a <see cref="SegmentationSystem.spaceToken"/> that appears within the segment's range. </para>
 /// <para> - .. and if no space tokens were found either, we cut at the maximum allowed length. This may cut words in the middle, so plan accordingly. </para>

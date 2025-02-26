@@ -30,8 +30,16 @@ public class PlaybackHandle {
 }
 
 /// <summary> A handle containing callbacks covering the full lifetime of a 'Speak' request. </summary>
-/// <remarks> The included delegates can be subscribed to for fine updates over the specific synthesis's lifetime. </remarks>
+/// <remarks> The included delegates can be subscribed to for fine updates over the synthesis's lifetime. </remarks>
 public class SynthesisHandle {
+    /// <summary> Callback raised when the info of a specific job step got sent to the model for inference. (NOT for playback) </summary>
+    /// <remarks> Once the inference starts, the ONNX does not support its cancellation, so it has to be waited out. </remarks>
+    public Action<KokoroJob.KokoroJobStep> OnInferenceStepStarted;
+
+    /// <summary> Callback raised when a specific inference job step was completed. (NOT the playback) </summary>
+    /// <remarks> Once an inference step is completed, a playback handle is created, which is passed to this callback. </remarks>
+    public Action<KokoroJob.KokoroJobStep, PlaybackHandle> OnInferenceStepCompleted;
+
     /// <summary> Callback raised when playback for given speech request just started. </summary>
     /// <remarks> Can be used to retrieve info about the original task, including spoken text, and phonemes. </remarks>
     public Action<SpeechStartPacket> OnSpeechStarted;
@@ -46,7 +54,8 @@ public class SynthesisHandle {
 
     /// <summary> Callback raised when the playback was stopped amidst speech. Can retrieve which parts were spoken, in part or in full. </summary>
     /// <remarks> Note that "Cancel" will NOT BE CALLED for speeches whose playback never ever started. Consider subscribing to this in `OnSpeechStarted`. </remarks>
-    public Action<SpeechCancelationPacket> OnSpeechCanceled;
+    public Action<SpeechCancellationPacket> OnSpeechCanceled;
+
 
     /// <summary> The inference job this handle is connected to. </summary>
     public KokoroJob Job { get; init; }

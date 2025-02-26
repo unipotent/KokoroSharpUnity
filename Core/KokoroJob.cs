@@ -23,10 +23,12 @@ public class KokoroJob {
         if (StepIndex == 0) { State = KokoroJobState.Running; }
 
         var step = Steps[StepIndex];
+        step.OnStepStarted?.Invoke();
+
         var output = model.Infer(step.Tokens, step.VoiceStyle, step.Speed);
         if (State == KokoroJobState.Canceled) { return; }
 
-        Steps[StepIndex].OnStepComplete?.Invoke(output);
+        step.OnStepComplete?.Invoke(output);
         if (++StepIndex >= Steps.Count) { State = KokoroJobState.Completed; }
     }
 
@@ -49,6 +51,9 @@ public class KokoroJob {
         public float Speed { get; init; }
         public int[] Tokens { get; init; }
         public float[,,] VoiceStyle { get; init; }
+
+        /// <summary> Gets invoked when this step gets into scope and sent to the model for inference. </summary>
+        public Action OnStepStarted { get; set; }
 
         /// <summary> Gets invoked after this step is fully processed by the engine, with an array of the output audio samples as parameter. </summary>
         public Action<float[]> OnStepComplete { get; set; }

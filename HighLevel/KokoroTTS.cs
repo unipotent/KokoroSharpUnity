@@ -24,7 +24,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
 
     /// <summary> Callback raised when the playback was stopped amidst speech. Can retrieve which parts were spoken, in part or in full. </summary>
     /// <remarks> Note that "Cancel" will NOT BE CALLED for packets whose playback never ever started. </remarks>
-    public event Action<SpeechCancelationPacket> OnSpeechCanceled;
+    public event Action<SpeechCancellationPacket> OnSpeechCanceled;
 
     /// <summary> If true, the output audio of the model will be *nicified* before being played back. </summary>
     /// <remarks> Nicification includes trimming silent start and finish, and attempting to reduce noise. </remarks>
@@ -72,6 +72,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
         var phonemesCache = ttokens.Count > 1 ? new List<char>() : null;
         currentHandle = new SynthesisHandle() { Job = job, TextToSpeak = text };
         foreach (var step in job.Steps) {
+            step.OnStepStarted  = () => currentHandle.OnInferenceStepStarted?.Invoke(step);
             step.OnStepComplete = (samples) => EnqueueWithCallbacks(samples, text, ttokens, step, job, currentHandle, pipelineConfig, phonemesCache);
             Debug.WriteLine($"[step {job.Steps.IndexOf(step)}: {new string(step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray())}]".Replace("\n", "®"));
         }
@@ -92,13 +93,15 @@ public sealed partial class KokoroTTS : KokoroEngine {
         base.Dispose();
     }
 
-    /// <summary> This is a callback that gets invoked with the model's outputs (/audio samples) as parameters, once an inference job is complete. </summary>
+    /// <summary> This is a callback that gets invoked with the model's outputs (/audio samples) as parameters, once an inference job's step is complete. </summary>
     /// <remarks> It in turn relays those samples to the <see cref="KokoroPlayback"/> instance, and sets up follow-up callbacks regarding playback progress. </remarks>
     void EnqueueWithCallbacks(float[] samples, string text, List<int[]> allTokens, KokoroJob.KokoroJobStep step, KokoroJob job, SynthesisHandle handle, KokoroTTSPipelineConfig pipelineConfig, List<char> phonemesCache = null) {
         phonemesCache ??= [];
         var allPhonemesToSpeak = job.Steps.SelectMany(x => x.Tokens ?? []).Select(x => Tokenizer.TokenToChar[x]).ToArray();
         var playbackHandle = playbackInstance.Enqueue(samples, OnStartedCallback, OnCompleteCallback, OnCanceledCallback);
-        handle.ReadyPlaybackHandles.Add(playbackHandle); // Marks the inference as "completed" and registers the playback handle as "ready".
+        handle.ReadyPlaybackHandles.Add(playbackHandle); // Mark the inference as "completed" and register the playback handle as "ready".
+        handle.OnInferenceStepCompleted?.Invoke(step, playbackHandle); // Notify end users that the step is complete, and pass the handle.
+
         // Finally, if the segment is gracefully ended with a punctuation token, add some pause to it, to emulate natural pause.
         bool shouldAddPause = NicifyAudio && pipelineConfig != null && Tokenizer.PunctuationTokens.Contains(step.Tokens[^1]);
         if (shouldAddPause) {
@@ -155,7 +158,7 @@ public sealed partial class KokoroTTS : KokoroEngine {
             // Let's assume the amount of spoken phonemes linearly matches the percentage.
             var T = (int) Math.Round(step.Tokens.Length * t.percentage); // L * t
             var phonemesSpokenGuess = step.Tokens.Take(T).Select(x => Tokenizer.TokenToChar[x]);
-            var cancelationPacket = new SpeechCancelationPacket() {
+            var cancelationPacket = new SpeechCancellationPacket() {
                 RelatedJob = job,
                 RelatedStep = step,
                 SpokenText_BestGuess = MakeBestGuess(t.percentage, step.Tokens.Select(x => Tokenizer.TokenToChar[x]).ToArray()),

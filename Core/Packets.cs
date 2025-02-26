@@ -1,7 +1,7 @@
 ﻿namespace KokoroSharp.Core;
 
-/// <summary> Callback packet that gets sent when part of the speech playback was completed. </summary>
-/// <remarks> Contains info about the part that was spoken since the previous packet was sent. </remarks>
+/// <summary> Callback packet that gets sent when the speech playback starts. Called only once, regardless of segmentation. </summary>
+/// <remarks> Contains info about the full text that is to be spoken, and its phonemized form. </remarks>
 public struct SpeechStartPacket {
     /// <summary> The full list of phonemes that started being spoken. </summary>
     public char[] PhonemesToSpeak;
@@ -37,7 +37,7 @@ public struct SpeechProgressPacket {
 
 /// <summary> Callback packet that gets sent when the speech playback was interrupted. </summary>
 /// <remarks> Note that "Cancel" will be SKIPPED for packets whose playback was aborted without ever starting. </remarks>
-public struct SpeechCancelationPacket {
+public struct SpeechCancellationPacket {
 
     /// <summary> The phonemes that were spoken since the beginning of this speech/KokoroJob. </summary>
     /// <remarks> Note that these have <b>INDEED</b> been spoken but they do NOT include the last segment's phonemes. </remarks>
@@ -77,13 +77,13 @@ public struct SpeechCompletionPacket {
     public KokoroJob.KokoroJobStep RelatedStep;
 }
 
-/// <summary> A packet that contains info regarding the current state of the speech, helpful for guessing the  </summary>
+/// <summary> A packet that contains info regarding the current state of the speech, helpful for guessing the spoken parts. </summary>
 public struct SpeechInfoPacket {
     /// <summary> The whole text that the speech job of interest has to speak. </summary>
     public string OriginalText;
 
     /// <summary> ALL tokens of phonemes that the speech job of interest has to speak, nicely segmented. </summary>
-    public List<int[]> AllTokens;
+    public IReadOnlyList<int[]> AllTokens;
 
     /// <summary> The phonemes of segment that have been already spoken. </summary>
     public char[] PreSpokenPhonemes;
