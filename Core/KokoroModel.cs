@@ -18,7 +18,6 @@ public sealed class KokoroModel : IDisposable {
         session = new InferenceSession(modelPath, options ?? defaultOptions);
     }
 
-
     /// <summary> Requests inference with the Model via the ONNX runtime, with specified tokens, style, and speed. </summary>
     /// <remarks> Synchronously waits for the output (audio samples), and returns them when ready. Best used in async context. </remarks>
     public float[] Infer(int[] tokens, float[,,] voiceStyle, float speed = 1) {

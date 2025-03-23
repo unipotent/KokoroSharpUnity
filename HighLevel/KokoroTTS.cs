@@ -49,15 +49,15 @@ public sealed partial class KokoroTTS : KokoroEngine {
     /// <param name="text"> The text to speak. </param>
     /// <param name="voice"> The voice that will speak it. Can be loaded via <see cref="KokoroVoiceManager.GetVoice(string)"/>. </param>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
-    public SynthesisHandle Speak(string text, KokoroVoice voice, KokoroTTSPipelineConfig pipelineConfig = null)
+    public SynthesisHandle Speak(string text, KokoroVoice voice, KokoroTTSPipelineConfig pipelineConfig = default)
         => Speak_Phonemes(text, Tokenizer.Tokenize(text.Trim(), voice.GetLangCode(), pipelineConfig?.PreprocessText ?? true), voice, pipelineConfig, fast: false);
 
     /// <summary> Segments the text before speaking it with the specified voice, resulting in an almost immediate response for the first chunk, with a potential hit in quality. </summary>
-    /// <remarks> This is the simplest, highest-level interface of the library. For more fine-grained controls, see <see cref="KokoroEngine"/>.</remarks>
+    /// <remarks> This is the simplest, highest-level interface of the library. For more fine-grained controls, see <see cref="KokoroEngine"/>. </remarks>
     /// <param name="text"> The text to speak. </param>
     /// <param name="voice"> The voice that will speak it. Can be loaded via <see cref="KokoroVoiceManager.GetVoice(string)"/>. </param>
     /// <returns> A handle with delegates regarding speech progress. Those can be subscribed to for updates regarding the lifetime of the synthesis. </returns>
-    public SynthesisHandle SpeakFast(string text, KokoroVoice voice, KokoroTTSPipelineConfig pipelineConfig = null)
+    public SynthesisHandle SpeakFast(string text, KokoroVoice voice, KokoroTTSPipelineConfig pipelineConfig = default)
         => Speak_Phonemes(text, Tokenizer.Tokenize(text.Trim(), voice.GetLangCode(), pipelineConfig?.PreprocessText ?? true), voice, pipelineConfig, fast: true);
 
     /// <summary> Optional way to speak a pre-phonemized input. For actual <b>"text"</b>-to-speech inference, use <b>Speak(..)</b> and <b>SpeakFast(..)</b>. </summary>
