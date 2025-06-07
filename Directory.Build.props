@@ -1,0 +1,14 @@
+<Project>
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);NU5128;NU5100</NoWarn>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute> 
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Version>0.6.0</Version>
+        <Authors>Lyrcaxis</Authors>
+        <RepositoryUrl>https://github.com/Lyrcaxis/KokoroSharp</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    </PropertyGroup>
+</Project>

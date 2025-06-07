@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>KokoroSharp.GPU.Linux</PackageId>
+        <Description>The Gpu.Linux runtime for KokoroSharp: an inference engine for Kokoro TTS with ONNX runtime, enabling fast and flexible local text-to-speech (fp/quanted) purely via C#. It features segment streaming, voice mixing, linear job scheduling, and optional playback.</Description>
+        <PackageTags>Kokoro, TextToSpeech, TTS, ONNX, AI, SpeechSynthesis, Text, To, Speech, .NET, Linux, Offline, GPU</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Linux" Version="1.22.0"/>
+        <ProjectReference Include="..\KokoroSharp.csproj"/>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+</Project>

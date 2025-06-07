@@ -24,17 +24,20 @@ With a custom phonemization solution, these additional languages are also suppor
 
 ## How to setup
 - **On Windows, Linux, and MacOS:** Install via **Nuget** ([Package Manager](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-in-visual-studio) or [CLI](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli)), and you're set!
+- **Selecting the correct package:** [KokoroSharp.CPU](https://www.nuget.org/packages/KokoroSharp.CPU) is plug-and-play. For GPU support, see [RUNNING_ON_GPU.md]().
 - **On Other platforms**: For platforms other than the ones above, developers are expected to provide their own phonemization solution. The built-in tokenizer supports raw `(phonemes -> tokens)` conversion.
 
 ###### The package is accessible on all .NET platforms, yet integrated phonemization is only available with the eSpeak NG backend atm.
 
-## Getting started
+## Getting started with the KokoroSharp.CPU package:
 ```csharp
 KokoroTTS tts = KokoroTTS.LoadModel(); // Load or download the model (~320MB for full precision)
 KokoroVoice heartVoice = KokoroVoiceManager.GetVoice("af_heart"); // Grab a voice of your liking,
 while (true) { tts.SpeakFast(Console.ReadLine(), heartVoice); } // .. and have it speak your text!
 // Note: Language detection is automated based on what the loaded voice supports.
 ```
+
+###### For running on GPU, check out [RUNNING_ON_GPU.md](https://github.com/Lyrcaxis/KokoroSharp/blob/main/RUNNING_ON_GPU.md).
 
 Above is a simple way to get started on the highest level. For more control, check out [the example Program](https://github.com/Lyrcaxis/KokoroSharp/blob/main/Program.cs), which covers more advanced parts like job scheduling, voice mixing, and long-term, speaker-agnostic playback queuing.
 

@@ -2,8 +2,6 @@
 
 using Microsoft.ML.OnnxRuntime;
 
-using System.Diagnostics;
-
 using static KokoroSharp.KModel;
 
 /// <summary> All available V1 releases of the model in ONNX form, including Full Precision and Quantized forms. </summary>
@@ -16,6 +14,14 @@ public partial class KokoroTTS {
         { int8,    "kokoro-quant-convinteger.onnx" },
     };
     static string URL(KModel quant) => $"https://github.com/taylorchu/kokoro-onnx/releases/download/v0.2.0/{ModelNamesMap[quant]}";
+
+    static KokoroTTS() {
+        try { _ = new SessionOptions(); }
+        catch {
+            throw new("This version of KokoroSharp does not come with a runtime supported by your system. For the previous plug & play package, use `KokoroSharp.CPU` (which works as-is for all platforms).\n" +
+                "NOTE: This change happened because KokoroSharp now supports running on GPU. Refer to the project's README for more info: https://github.com/Lyrcaxis/KokoroSharp.");
+        }
+    }
 
     /// <summary> Returns 'true' if the specific model is already downloaded, otherwise 'false'. </summary>
     public static bool IsDownloaded(KModel model) => File.Exists(ModelNamesMap[model]);
