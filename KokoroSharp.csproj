@@ -35,6 +35,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="KokoroSharp.targets" Pack="true" PackagePath="build/" />
+        <None Include="KokoroSharp.targets" Pack="true" PackagePath="buildTransitive/" />
     </ItemGroup>
 </Project>
