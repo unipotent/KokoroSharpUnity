@@ -1,4 +1,4 @@
-[![NuGet](https://img.shields.io/nuget/v/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
+﻿[![NuGet](https://img.shields.io/nuget/v/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
 
 https://github.com/user-attachments/assets/82a32382-2e9b-4233-a66f-987b2802717e
@@ -17,10 +17,7 @@ It enables developers to perform flexible and fast text-to-speech synthesis util
 - Optional multi-platform playback support with pre-integrated audio queue handling.
 
 Supports languages/accents:
-- `[American English, British English, Spanish, French, Italian, Brazilian/Portuguese]`.
-
-With a custom phonemization solution, these additional languages are also supported:
-- `[MandarinChinese, Japanese, Hindi]`.
+- `[American English, British English, MandarinChinese, Japanese, Hindi, Spanish, French, Italian, Brazilian/Portuguese]`.
 
 ## How to setup
 - **On Windows, Linux, and MacOS:** Install via **Nuget** ([Package Manager](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-in-visual-studio) or [CLI](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli)), and you're set!
@@ -53,6 +50,8 @@ Above is a simple way to get started on the highest level. For more control, che
 - Mind that `LoadVoicesFromPath` exists as an option, in case developers want to implement their custom voice-loading logic when shipping a project that utilizes KokoroSharp for text-to-speech synthesis.
 
 - In addition, the built-in tokenization (`text -> tokens`) is NOT mandatory, and can be bypassed for platforms like `Android/iOS`, given developers provide pre-phonemized input with their phonemization solution of choice.
+
+- For Phoneme Literals, you can use the following syntax: `"[tomato](/təmeɪtoʊ/) [tomato](/təmɑːtoʊ/)."`.
 
 ## License
 - This project is licensed under the [MIT License](https://github.com/Lyrcaxis/KokoroSharp/blob/main/LICENSE).
