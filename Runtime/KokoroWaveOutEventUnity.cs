@@ -2,6 +2,7 @@ using KokoroSharp.Core;
 using NAudio.Wave;
 using System;
 using UnityEngine;
+using KokoroSharp.Utilities;
 namespace KokoroSharpUnity
 {
     public class KokoroWaveOutEventUnity : KokoroWaveOutEvent
