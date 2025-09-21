@@ -1,6 +1,8 @@
 {
   "name": "com.unipotent.kokorosharpunity",
-  "references": [],
+  "references": [
+    "com.github.asus4.onnxruntime"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": true,
