@@ -20,9 +20,9 @@ namespace KokoroSharp
 
         /// <summary> Gathers and loads all voices on the specified path. ("voices" is the default path the NuGet Package bundles the voices at). </summary>
         /// <remarks> This exists in case developers want to ship their project with custom paths or use custom voice loading logic. </remarks>
-        public static void LoadVoicesFromPath(string voicesPath = "voices")
+        public static void LoadVoicesFromPath(string voicesPath = "Kokoro/voices")
         {
-            if (voicesPath == "voices")
+            if (voicesPath == "Kokoro/voices")
                 voicesPath = Path.Combine(Application.streamingAssetsPath, voicesPath);
 
             if (!Directory.Exists(voicesPath)) { throw new DirectoryNotFoundException(); }

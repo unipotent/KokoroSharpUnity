@@ -3,6 +3,8 @@ using NAudio.Wave;
 using System;
 using UnityEngine;
 using KokoroSharp.Utilities;
+using UnityEngine.Audio; 
+
 namespace KokoroSharpUnity
 {
     public class KokoroWaveOutEventUnity : KokoroWaveOutEvent
@@ -22,10 +24,15 @@ namespace KokoroSharpUnity
 
         public KokoroWaveOutEventUnity()
         {
-            kokoroUnity = UnityEngine.Object.FindFirstObjectByType<KokoroUnity>();
-            if (kokoroUnity == null)
+            ExecuteOnMainThread(()=>
             {
-                Debug.LogError("Make sure to add the KokoroUnity component to an object!");
+                kokoroUnity = UnityEngine.Object.FindFirstObjectByType<KokoroUnity>();
+                if (kokoroUnity == null)
+                {
+                    GameObject obj = new GameObject("KokoroUnity");
+                    kokoroUnity = obj.AddComponent<KokoroUnity>();
+                    kokoroUnity.audioSource = new GameObject("AudioSource", typeof(AudioSource)).GetComponent<AudioSource>();
+                }
             }
         }
         public override PlaybackState PlaybackState
