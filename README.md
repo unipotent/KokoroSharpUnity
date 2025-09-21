@@ -1,59 +1,43 @@
-﻿[![NuGet](https://img.shields.io/nuget/v/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/KokoroSharp.svg)](https://www.nuget.org/packages/KokoroSharp/)
+This is an adapted version of KokoroSharp that updates the C# 9+ syntax and uses a KokoroWaveOutEvent for Unity audio sources to make it usable in Unity.
+This package includes the eSpeak NG dlls from `https://github.com/Lyrcaxis/KokoroSharpBinaries`, where you can also get the voices by running the [download script](https://github.com/Lyrcaxis/KokoroSharpBinaries/blob/main/convert_kokoro_voices.py).
+The voices are expected to be in Assets/StreamingAssets/Kokoro/voices.
 
-https://github.com/user-attachments/assets/82a32382-2e9b-4233-a66f-987b2802717e
+You can install this package by:
+1. Opening your Unity project
+2. Opening the Package Manager (Window > Package Manager)
+3. Click the "+" button in the top-left
+4. Select "Add package from git URL..."
+5. Enter the repository URL: `https://github.com/unipotent/KokoroSharpUnity.git`
+6. Click "Add"
 
-# KokoroSharp
-KokoroSharp is a fully-featured inference engine for [Kokoro TTS](https://huggingface.co/spaces/hexgrad/Kokoro-TTS), built entirely in C# with ONNX runtime.
-It enables developers to perform flexible and fast text-to-speech synthesis utilizing multiple speakers and languages.
+## Dependencies
+This package requires the package [com.github.asus4.onnxruntime](https://github.com/asus4/onnxruntime-unity/tree/main)
+Be sure to follow the installation instructions from their readme.
 
-## Features
-- Plug & Play integration via the nuget package. All dependencies are handled automatically.
-- Nuget package includes [ALL voices released by hexgrad with their Kokoro 82M v1.0 release](https://huggingface.co/hexgrad/Kokoro-82M/tree/main/voices).
-- High-level interface designed to suit both beginners and power users.
-- Text-segment streaming for seamless text-to-speech. Responses feel instant.
-- Voice mixing with no restrictions on the amounts of voices mixed, and ability to save/load mixed voices.
-- Linear job scheduling with background worker as dispatcher.
-- Optional multi-platform playback support with pre-integrated audio queue handling.
+## Usage
+- Add voices as mentioned above
+- Add the KokoroUnity component to a GameObject, and drag in your audio source.
 
-Supports languages/accents:
-- `[American English, British English, MandarinChinese, Japanese, Hindi, Spanish, French, Italian, Brazilian/Portuguese]`.
-
-## How to setup
-- **On Windows, Linux, and MacOS:** Install via **Nuget** ([Package Manager](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-in-visual-studio) or [CLI](https://learn.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli)), and you're set!
-- **Selecting the correct package:** [KokoroSharp.CPU](https://www.nuget.org/packages/KokoroSharp.CPU) is plug-and-play. For GPU support, see [RUNNING_ON_GPU.md]().
-- **On Other platforms**: For platforms other than the ones above, developers are expected to provide their own phonemization solution. The built-in tokenizer supports raw `(phonemes -> tokens)` conversion.
-
-###### The package is accessible on all .NET platforms, yet integrated phonemization is only available with the eSpeak NG backend atm.
-
-## Getting started with the KokoroSharp.CPU package:
+Example code:
 ```csharp
-KokoroTTS tts = KokoroTTS.LoadModel(); // Load or download the model (~320MB for full precision)
-KokoroVoice heartVoice = KokoroVoiceManager.GetVoice("af_heart"); // Grab a voice of your liking,
-while (true) { tts.SpeakFast(Console.ReadLine(), heartVoice); } // .. and have it speak your text!
-// Note: Language detection is automated based on what the loaded voice supports.
+using KokoroSharp;
+using KokoroSharp.Core;
+
+void Start()
+{
+    KokoroTTS kokoroTTS = KokoroTTS.LoadModel();
+    KokoroVoice voice = KokoroVoiceManager.GetVoice("af_heart");
+    kokoroTTS.SpeakFast("Hello World!", voice);
+}
 ```
 
-###### For running on GPU, check out [RUNNING_ON_GPU.md](https://github.com/Lyrcaxis/KokoroSharp/blob/main/RUNNING_ON_GPU.md).
-
-Above is a simple way to get started on the highest level. For more control, check out [the example Program](https://github.com/Lyrcaxis/KokoroSharp/blob/main/Program.cs), which covers more advanced parts like job scheduling, voice mixing, and long-term, speaker-agnostic playback queuing.
-
-###### Models can be found on [taylorchu's releases](https://github.com/taylorchu/kokoro-onnx/releases/tag/v0.2.0), and can be loaded via `KokoroTTS.LoadModel("path/to/model")`, or downloaded automatically with `KokoroTTS.LoadModel()`. Check out the various overloads of `KokoroTTS.LoadModel` for background loading.
-
-## Notes
-- KokoroSharp prioritizes a smooth developer experience by logging potential misuse instead of throwing exceptions. Wherever possible, the library attempts to automatically resolve issues to minimize disruptions.
-
-- All communication with the AI model and playback devices happens on background threads, letting the main thread focus on rendering the UI in peace. The library is carefully designed with thread-safety in mind.
-
-- The `voices` folder are automatically copied to your build path when you build and are ready to be accessed. Same with the mentioned `espeak` backends. Developers may opt to remove them when shipping their apps.
-
-- Mind that `LoadVoicesFromPath` exists as an option, in case developers want to implement their custom voice-loading logic when shipping a project that utilizes KokoroSharp for text-to-speech synthesis.
-
-- In addition, the built-in tokenization (`text -> tokens`) is NOT mandatory, and can be bypassed for platforms like `Android/iOS`, given developers provide pre-phonemized input with their phonemization solution of choice.
-
-- For Phoneme Literals, you can use the following syntax: `"[tomato](/təmeɪtoʊ/) [tomato](/təmɑːtoʊ/)."`.
+Tested on Unity 6, Windows 11 on CPU 
 
 ## License
-- This project is licensed under the [MIT License](https://github.com/Lyrcaxis/KokoroSharp/blob/main/LICENSE).
+- This package is provided under the [MIT LICENSE](LICENSE).
+- KokoroSharp is licensed under the [MIT License](https://github.com/Lyrcaxis/KokoroSharp/blob/main/LICENSE).
 - The [Kokoro 82M model](https://huggingface.co/hexgrad/Kokoro-82M) and its voices are released under the [Apache License](https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md).
 - eSpeak NG is licensed under the [GPLv3 License](https://github.com/espeak-ng/espeak-ng/blob/master/COPYING).
+- NumSharp is licensed under the [Apache 2.0 License](https://github.com/SciSharp/NumSharp/blob/master/LICENSE).
+- NAudio is licensed under the [MIT Licnese](https://github.com/naudio/NAudio/blob/master/license.txt).
+
