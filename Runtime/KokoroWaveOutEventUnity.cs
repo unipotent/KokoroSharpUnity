@@ -24,16 +24,16 @@ namespace KokoroSharpUnity
 
         public KokoroWaveOutEventUnity()
         {
-            ExecuteOnMainThread(()=>
+            ExecuteOnMainThread(() =>
             {
                 kokoroUnity = UnityEngine.Object.FindFirstObjectByType<KokoroUnity>();
                 if (kokoroUnity == null)
                 {
                     GameObject obj = new GameObject("KokoroUnity");
                     kokoroUnity = obj.AddComponent<KokoroUnity>();
-                    kokoroUnity.audioSource = new GameObject("AudioSource", typeof(AudioSource)).GetComponent<AudioSource>();
+                    kokoroUnity.UnityAudioSource = new GameObject("AudioSource", typeof(AudioSource)).GetComponent<AudioSource>();
                 }
-            }
+            });
         }
         public override PlaybackState PlaybackState
         {
