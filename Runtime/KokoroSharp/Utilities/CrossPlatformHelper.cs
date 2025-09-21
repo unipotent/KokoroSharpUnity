@@ -4,6 +4,8 @@ using KokoroSharp.Processing;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using KokoroSharpUnity;
+
 namespace KokoroSharp.Utilities
 {
     /// <summary> Contains functionality regarding cross-platform compatibility, like providing the path to the appropriate binaries, and setting up the correct audio player. </summary>
